@@ -15,7 +15,7 @@ public class ReflectClass {
     public ReflectClass(Class<?> instance) {
         this.className = instance.getCanonicalName();
         this.classObject = instance;
-        this.instance = instance;
+        this.instance = null;
     }
 
     public ReflectClass(Object instance) {
