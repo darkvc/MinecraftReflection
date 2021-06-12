@@ -15,7 +15,7 @@ Repository:
 ```
 <repository>
     <id>github-darkvc</id>
-    <url>https://github.com/darkvc/MinecraftReflection/raw/mvn-repo/</url>
+    <url>https://github.com/darkvc/MinecraftReflection/raw/maven/</url>
     <snapshots>
         <enabled>true</enabled>
         <updatePolicy>always</updatePolicy>
