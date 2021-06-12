@@ -233,9 +233,9 @@ public class Mappings {
     }
 
     private static void parseMojang(String[] lines) {
-        Pattern mojangClassPattern = Pattern.compile("([a-z0-9A-Z\\-\\.$]+) -> ([a-zA-Z]+):", Pattern.MULTILINE);
-        Pattern mojangFieldPattern = Pattern.compile("([a-zA-Z0-9$]+) -> ([$a-zA-Z0-9]+)", Pattern.MULTILINE);
-        Pattern mojangMethodPattern = Pattern.compile("([<>a-zA-Z0-9_$]+)[\\(\\)].+ -> ([a-zA-Z0-9$]+)", Pattern.MULTILINE);
+        Pattern mojangClassPattern = Pattern.compile("([a-z0-9A-Z\\-\\._$]+) -> ([a-zA-Z]+):", Pattern.MULTILINE);
+        Pattern mojangFieldPattern = Pattern.compile("([a-zA-Z0-9_$]+) -> ([$a-zA-Z0-9_]+)", Pattern.MULTILINE);
+        Pattern mojangMethodPattern = Pattern.compile("([<>a-zA-Z0-9_$]+)[\\(\\)].+ -> ([_a-zA-Z0-9$]+)", Pattern.MULTILINE);
 
         // Read data line by line
         ClassMap currentClass = null;

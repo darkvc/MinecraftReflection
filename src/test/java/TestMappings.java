@@ -19,7 +19,9 @@ public class TestMappings {
         }*/
         System.out.println(Mappings.getClassName("NBTCompressedStreamTools").getMethod("readCompressed"));
         System.out.println(Mappings.getClassName("NBTCompressedStreamTools").getMethod("writeCompressed"));
+        System.out.println(Mappings.getClassName("Blocks").getField("CYAN_SHULKER_BOX"));
         assert Mappings.getClassName("NBTCompressedStreamTools").getMethod("readCompressed") != null;
         assert Mappings.getClassName("NBTCompressedStreamTools").getMethod("readCompressed") != null;
+        assert Mappings.getClassName("Blocks").getField("CYAN_SHULKER_BOX") != null;
     }
 }

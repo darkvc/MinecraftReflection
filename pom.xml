@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>vc.dark.minecraft</groupId>
-    <artifactId>MinecraftReflection</artifactId>
+    <artifactId>minecraftreflection</artifactId>
     <version>1.0-SNAPSHOT</version>
     <repositories>
         <!-- This adds the Spigot Maven repository to the build -->
@@ -84,4 +84,13 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub darkvc Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/darkvc/MinecraftReflection</url>
+        </repository>
+    </distributionManagement>
+
 </project>
