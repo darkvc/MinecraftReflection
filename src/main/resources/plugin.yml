@@ -1,0 +1,4 @@
+name: MinecraftReflection
+version: 1.0
+main: vc.dark.minecraft.reflection.plugin.SpigotPlugin
+load: STARTUP

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>vc.dark.minecraft</groupId>
+    <artifactId>MinecraftReflection</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <repositories>
+        <!-- This adds the Spigot Maven repository to the build -->
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>codemc-releases</id>
+            <url>https://repo.codemc.io/repository/maven-releases/</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <finalName>MinecraftReflection</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <minimizeJar>true</minimizeJar>
+                            <filters>
+                                <filter>
+                                    <artifact>log4j:log4j</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.commons:commons-math3</artifact>
+                                    <!--<includes>
+                                        <include>org/apache/commons/math3/random/**</include>
+                                    </includes>-->
+                                </filter>
+                                <filter>
+                                    <artifact>commons-codec:commons-codec</artifact>
+                                    <!--<includes>
+                                        <include>org/apache/commons/math3/random/**</include>
+                                    </includes>-->
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <!--This adds the Spigot API artifact to the build -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>1.17-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.rutgerkok</groupId>
+            <artifactId>worldgeneratorapi</artifactId>
+            <version>1.1.4</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>
