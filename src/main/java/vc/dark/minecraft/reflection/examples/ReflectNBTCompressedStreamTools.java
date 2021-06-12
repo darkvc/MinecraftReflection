@@ -13,7 +13,7 @@ public class ReflectNBTCompressedStreamTools extends MinecraftReflectClass {
         super("NBTCompressedStreamTools", true);
         if (this.mappings == null) {
             // Backwards compatibility hack for 1.16.5 (and below potentially)
-            this.mappings = new ClassMap("", "");
+            this.mappings = new ClassMap();
             this.mappings.addMethod("readCompressed", "a");
             this.mappings.addMethod("writeCompressed", "a");
         }
