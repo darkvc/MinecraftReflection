@@ -82,7 +82,7 @@ public class MinecraftReflectClass extends ReflectClass {
             if (m.getName().equals(name)) {
                 // Original value exists.
                 alreadyFoundFields.put(name, name);
-                return res;
+                return name;
             }
             if (m.getName().equals(res)) {
                 // Mapped value exists.
@@ -94,7 +94,7 @@ public class MinecraftReflectClass extends ReflectClass {
             if (m.getName().equals(name)) {
                 // Original value exists.
                 alreadyFoundFields.put(name, name);
-                return res;
+                return name;
             }
             if (m.getName().equals(res)) {
                 // Mapped value exists.
@@ -128,7 +128,7 @@ public class MinecraftReflectClass extends ReflectClass {
             if (m.getName().equals(name)) {
                 // Original value exists.
                 alreadyFoundMethods.put(name, name);
-                return res;
+                return name;
             }
             if (m.getName().equals(res)) {
                 // Mapped value exists.
@@ -140,7 +140,7 @@ public class MinecraftReflectClass extends ReflectClass {
             if (m.getName().equals(name)) {
                 // Original value exists.
                 alreadyFoundMethods.put(name, name);
-                return res;
+                return name;
             }
             if (m.getName().equals(res)) {
                 // Mapped value exists.
