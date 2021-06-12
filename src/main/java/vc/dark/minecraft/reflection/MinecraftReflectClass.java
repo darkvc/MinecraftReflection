@@ -11,12 +11,12 @@ import java.util.Map;
 
 public class MinecraftReflectClass extends ReflectClass {
 
-    private ClassMap mappings;
+    protected ClassMap mappings;
     private Map<String, String> alreadyFoundMethods = new HashMap<>();
     private Map<String, String> alreadyFoundFields = new HashMap<>();
 
     // This should only be called by mappings.
-    public MinecraftReflectClass(String className, ClassMap map) throws ClassNotFoundException {
+    MinecraftReflectClass(String className, ClassMap map) throws ClassNotFoundException {
         super(className);
         this.mappings = map;
     }
@@ -26,24 +26,35 @@ public class MinecraftReflectClass extends ReflectClass {
         this.mappings = existing.mappings;
     }
 
-    public MinecraftReflectClass(String name) throws ClassNotFoundException {
-        ClassMap map = Mappings.getClassName(name);
-        if (map == null) {
-            throw new ClassNotFoundException("Could not find class " + name);
+    public MinecraftReflectClass(String name, boolean fuzzyNms) throws ClassNotFoundException {
+        ReflectClass reflectClass;
+        if (!fuzzyNms) {
+             reflectClass = MinecraftReflection.getExactClass(name);
+        } else {
+             reflectClass = MinecraftReflection.getClass(name);
         }
-        this.mappings = map;
+        this.className = reflectClass.className;
+        this.classObject = reflectClass.classObject;
         try {
-            this.classObject = Class.forName(map.getObfuscated());
-        } catch (ClassNotFoundException e) {
-            try {
-                this.classObject = Class.forName(map.getOriginal());
-            } catch (ClassNotFoundException e2) {
-                e.printStackTrace();
-                e2.printStackTrace();
-                throw e2;
-            }
+            MinecraftReflectClass mcReflect = (MinecraftReflectClass) reflectClass;
+            this.mappings = mcReflect.mappings;
+        } catch (ClassCastException e) {
+            e.printStackTrace();
         }
-        this.className = this.classObject.getCanonicalName();
+        this.instance = null;
+    }
+
+    @Deprecated
+    public MinecraftReflectClass(String name) throws ClassNotFoundException {
+        ReflectClass reflectClass = MinecraftReflection.getClass(name);
+        this.className = reflectClass.className;
+        this.classObject = reflectClass.classObject;
+        try {
+            MinecraftReflectClass legacy = (MinecraftReflectClass) reflectClass;
+            this.mappings = legacy.mappings;
+        } catch (ClassCastException e) {
+            e.printStackTrace();
+        }
         this.instance = null;
     }
 
@@ -52,6 +63,9 @@ public class MinecraftReflectClass extends ReflectClass {
     }
 
     private String findField(String name) {
+        if (this.mappings == null) {
+            return name;
+        }
         if (name.length() < 4) {
             return name;
         }
@@ -93,6 +107,9 @@ public class MinecraftReflectClass extends ReflectClass {
     }
 
     private String findMethod(String name) {
+        if (this.mappings == null) {
+            return name;
+        }
         // Slight optimization
         if (name.length() < 4) {
             return name;

@@ -6,7 +6,7 @@
 
     <groupId>vc.dark.minecraft</groupId>
     <artifactId>minecraftreflection</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
     <repositories>
         <!-- This adds the Spigot Maven repository to the build -->
         <repository>
@@ -64,6 +64,18 @@
                 <configuration>
                     <source>8</source>
                     <target>8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>vc.dark.minecraft.reflection.MinecraftReflection</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
         </plugins>

@@ -1,5 +1,7 @@
 package vc.dark.minecraft.reflection.mappings;
 
+import vc.dark.minecraft.reflection.MinecraftReflection;
+
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -16,6 +18,12 @@ public class Mappings {
     static {
         versions = new HashMap<>();
         versions.put("1.17", new String[]{
+                /*
+                 * If there are issues storing URLs inside of here.
+                 * Please create an issue on this repository
+                 *
+                 * https://github.com/darkvc/MinecraftReflection/issues
+                */
                 "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.17-cl.csrg?at=3cec511b16ffa31cb414997a14be313716882e12",
                 "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.17-members.csrg?at=3cec511b16ffa31cb414997a14be313716882e12",
                 "https://launcher.mojang.com/v1/objects/84d80036e14bc5c7894a4fad9dd9f367d3000334/server.txt"
@@ -25,16 +33,32 @@ public class Mappings {
     public static Map<String, ClassMap> classes = new HashMap<>();
     public static Map<String, String> reverseClasses = new HashMap<>();
 
-    public static boolean hasMappings = true;
+    private static boolean hasMappings = false;
 
-    public static ClassMap getExactClass(String original) {
+    public static boolean hasMappings() {
+        return hasMappings;
+    }
+
+    public static String[] getSupportedVersions() {
+        return versions.keySet().toArray(new String[0]);
+    }
+
+    public static ClassMap getExactClassName(String original) {
+        MinecraftReflection.loadMappings();
+        if (!hasMappings()) {
+            return null;
+        }
         return classes.get(original);
     }
 
     public static ClassMap getClassName(String partial) {
+        MinecraftReflection.loadMappings();
+        if (!hasMappings()) {
+            return null;
+        }
         for (String k : classes.keySet()) {
-            if (k.contains("." + partial.substring(0, 1).toUpperCase() + partial.substring(1))) {
-                return getExactClass(k);
+            if (k.endsWith("." + partial.substring(0, 1).toUpperCase() + partial.substring(1)) || k.equals(partial)) {
+                return getExactClassName(k);
             }
         }
         return null;
@@ -117,6 +141,9 @@ public class Mappings {
     }
 
     public static void loadMappingsVersion(String version) {
+        if (hasMappings()) {
+            return;
+        }
         File cache = new File("cached_mcreflect");
         if (!cache.exists()) {
             if (!cache.mkdir()) {
@@ -124,7 +151,7 @@ public class Mappings {
             }
         }
         for (Map.Entry<String, String[]> entry : versions.entrySet()) {
-            if (version.contains(entry.getKey())) {
+            if (entry.getKey().endsWith(version)) {
                 String[] value = entry.getValue();
                 loadMappings(entry.getKey(),
                        value[0], value[1], value[2]);
@@ -133,7 +160,7 @@ public class Mappings {
         }
         hasMappings = classes.size() > 0;
         if (!hasMappings) {
-            System.err.println("Could not load mappings!!");
+            System.out.println("Could not load mappings.  ");
         }
     }
 
@@ -155,6 +182,7 @@ public class Mappings {
             switch (type) {
                 case "CL":
                     classes.put(originalClass, new ClassMap(originalClass, obfuscatedClass));
+                    break;
                 case "MD":
                     ClassMap target = classes.get(originalClass);
                     if (target == null) {
@@ -188,7 +216,7 @@ public class Mappings {
     }
 
     private static void parseBukkitClasses(String[] lines) {
-        Pattern bukkitClassPattern = Pattern.compile("([a-z0-9$\\-]+) ([a-zA-Z0-9/$]+)", Pattern.MULTILINE);
+        Pattern bukkitClassPattern = Pattern.compile("([a-zA-Z0-9/$]+) ([a-zA-Z0-9/$]+)", Pattern.MULTILINE);
         for (String data : lines) {
             if (data.startsWith("#")) {
                 continue;
@@ -200,7 +228,7 @@ public class Mappings {
                     // Skip this.
                     continue;
                 }
-                String obfuscated = m.group(1);
+                String obfuscated = m.group(1).replace("/", ".");
                 reverseClasses.put(obfuscated, original);
                 classes.put(original, new ClassMap(original, obfuscated));
             }
@@ -233,7 +261,7 @@ public class Mappings {
     }
 
     private static void parseMojang(String[] lines) {
-        Pattern mojangClassPattern = Pattern.compile("([a-z0-9A-Z\\-\\._$]+) -> ([a-zA-Z]+):", Pattern.MULTILINE);
+        Pattern mojangClassPattern = Pattern.compile("([a-z0-9A-Z\\-\\._$]+) -> ([a-z0-9A-Z\\-\\._$]+):", Pattern.MULTILINE);
         Pattern mojangFieldPattern = Pattern.compile("([a-zA-Z0-9_$]+) -> ([$a-zA-Z0-9_]+)", Pattern.MULTILINE);
         Pattern mojangMethodPattern = Pattern.compile("([<>a-zA-Z0-9_$]+)[\\(\\)].+ -> ([_a-zA-Z0-9$]+)", Pattern.MULTILINE);
 
@@ -278,7 +306,7 @@ public class Mappings {
                 String original = fieldMatcher.group(1);
                 String obfuscated = fieldMatcher.group(2);
                 if (original.equals(obfuscated)) {
-                    // Ignore saner mappings.
+                    // Ignore java lang overrides
                     continue;
                 }
                 currentClass.addField(original, obfuscated);
@@ -286,7 +314,7 @@ public class Mappings {
                 String original = methodMatcher.group(1);
                 String obfuscated = methodMatcher.group(2);
                 if (original.equals(obfuscated)) {
-                    // Ignore saner mappings.
+                    // Ignore java lang overrides
                     continue;
                 }
                 currentClass.addMethod(original, obfuscated);

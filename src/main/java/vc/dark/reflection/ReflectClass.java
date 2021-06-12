@@ -4,8 +4,8 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 
 public class ReflectClass {
-    protected String className;
-    protected Class<?> classObject;
+    public String className;
+    public Class<?> classObject;
     public Object instance;
 
     public ReflectClass() {
@@ -61,9 +61,13 @@ public class ReflectClass {
         try {
             Field f = this.classObject.getDeclaredField(name);
             f.setAccessible(true);
-            Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(f, f.getModifiers() & ~Modifier.FINAL);
+            try {
+                Field modifiersField = Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true);
+                modifiersField.setInt(f, f.getModifiers() & ~Modifier.FINAL);
+            } catch (Throwable e) {
+                ReflectFinalFieldHelper.makeNonFinal(f);
+            }
             f.set(this.instance, obj);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();

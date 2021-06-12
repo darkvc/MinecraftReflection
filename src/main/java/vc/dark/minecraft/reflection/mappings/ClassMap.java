@@ -10,6 +10,10 @@ public class ClassMap {
     private Map<String, String> methods = new HashMap<>();
     private Map<String, String> fields = new HashMap<>();
 
+    public ClassMap() {
+        this.original = "";
+        this.obfuscated = "";
+    }
 
     public ClassMap(String original, String obfuscated) {
         this.original = original;

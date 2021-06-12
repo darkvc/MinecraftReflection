@@ -2,6 +2,7 @@ package vc.dark.minecraft.reflection.examples;
 
 
 import vc.dark.minecraft.reflection.MinecraftReflectClass;
+import vc.dark.minecraft.reflection.mappings.ClassMap;
 
 import java.io.File;
 import java.io.InputStream;
@@ -9,7 +10,13 @@ import java.io.OutputStream;
 
 public class ReflectNBTCompressedStreamTools extends MinecraftReflectClass {
     public ReflectNBTCompressedStreamTools() throws ClassNotFoundException {
-        super("NBTCompressedStreamTools");
+        super("NBTCompressedStreamTools", true);
+        if (this.mappings == null) {
+            // Backwards compatibility hack for 1.16.5 (and below potentially)
+            this.mappings = new ClassMap("", "");
+            this.mappings.addMethod("readCompressed", "a");
+            this.mappings.addMethod("writeCompressed", "a");
+        }
     }
 
     public ReflectNBTTagCompound loadFile(File file) throws ClassNotFoundException {

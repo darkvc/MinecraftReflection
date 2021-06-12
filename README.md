@@ -27,10 +27,12 @@ Dependency:
 <dependency>
   <groupId>vc.dark.minecraft</groupId>
   <artifactId>minecraftreflection</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <scope>provided</scope>
+  <version>1.1-SNAPSHOT</version>
 </dependency>
 ```
 
-You will need to download and install the plugin into the server, which
-can be found in the Packages section of this repository.
+You do not need to install anything else (because the originally planned server plugin 
+component of this has been scrapped).
+
+
+

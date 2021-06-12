@@ -4,7 +4,7 @@ public class TestMappings {
 
     public void testMappings() {
         Mappings.loadMappingsVersion("1.17");
-        assert Mappings.hasMappings;
+        assert Mappings.hasMappings();
         /*for (Map.Entry<String, ClassMap> entry : Mappings.classes.entrySet()) {
             ClassMap map = entry.getValue();
             if (entry.getKey().equals("net.minecraft.nbt.DynamicOpsNBT")) {
@@ -17,11 +17,10 @@ public class TestMappings {
                 }
             }
         }*/
-        System.out.println(Mappings.getClassName("NBTCompressedStreamTools").getMethod("readCompressed"));
-        System.out.println(Mappings.getClassName("NBTCompressedStreamTools").getMethod("writeCompressed"));
-        System.out.println(Mappings.getClassName("Blocks").getField("CYAN_SHULKER_BOX"));
-        assert Mappings.getClassName("NBTCompressedStreamTools").getMethod("readCompressed") != null;
-        assert Mappings.getClassName("NBTCompressedStreamTools").getMethod("readCompressed") != null;
-        assert Mappings.getClassName("Blocks").getField("CYAN_SHULKER_BOX") != null;
+        assert Mappings.getClassName("NBTCompressedStreamTools").getMethod("readCompressed").equals("a");
+        assert Mappings.getClassName("NBTCompressedStreamTools").getMethod("writeCompressed").equals("a");
+        assert Mappings.getClassName("Blocks").getField("CYAN_SHULKER_BOX").equals("jn");
+        assert Mappings.getClassName("MinecraftServer").getOriginal().equals("net.minecraft.server.MinecraftServer");
+        assert Mappings.getExactClassName("net.minecraft.server.MinecraftServer").getOriginal().equals("net.minecraft.server.MinecraftServer");
     }
 }

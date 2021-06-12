@@ -1,14 +1,16 @@
 package vc.dark.minecraft.reflection.examples;
 
 import vc.dark.minecraft.reflection.MinecraftReflectClass;
+import vc.dark.minecraft.reflection.mappings.ClassMap;
 
 public class ReflectNBTTagCompound extends MinecraftReflectClass {
     public ReflectNBTTagCompound(Object instance) throws ClassNotFoundException {
-        super("NBTTagCompound");
+        super("NBTTagCompound", true);
         this.setInstance(instance);
         if (this.instance == null) {
             throw new ClassNotFoundException("Could not set instance to NBTTagCompound reflection class.");
         }
+        // The original method names are retained in spigot's build, so these can be used.
     }
 
     public void setShort(String tag, short value) {
