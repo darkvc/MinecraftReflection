@@ -38,8 +38,7 @@ public class MinecraftReflectClass extends ReflectClass {
         try {
             MinecraftReflectClass mcReflect = (MinecraftReflectClass) reflectClass;
             this.mappings = mcReflect.mappings;
-        } catch (ClassCastException e) {
-            e.printStackTrace();
+        } catch (ClassCastException ignored) {
         }
         this.instance = null;
     }

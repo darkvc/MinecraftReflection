@@ -12,6 +12,12 @@ public class ReflectClass {
         // For custom implementations.
     }
 
+    public ReflectClass(Class<?> instance) {
+        this.className = instance.getCanonicalName();
+        this.classObject = instance;
+        this.instance = instance;
+    }
+
     public ReflectClass(Object instance) {
         this.className = instance.getClass().getCanonicalName();
         this.classObject = instance.getClass();

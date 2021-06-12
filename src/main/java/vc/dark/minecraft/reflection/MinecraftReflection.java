@@ -82,6 +82,7 @@ public class MinecraftReflection {
         try {
             return Class.forName(String.format(nmsClass, version));
         } catch (ClassNotFoundException e) {
+            e.printStackTrace();
             return null;
         }
     }
