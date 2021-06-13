@@ -71,67 +71,77 @@ public class Mappings {
         map = new File(cache, "combined-" + version);
         if (map.exists()) {
             // Load this instead.
+            System.out.println("Loading combined mappings.");
             try {
                 loadCombined(Files.readAllLines(map.toPath()).toArray(new String[0]));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
-            map = new File(cache, "bukkit-classes-" + version);
-            if (!map.exists()) {
-                // grab it.
-                String data = getData(bukkitClassesUrl);
-                try {
-                    Files.write(map.toPath(), data.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new IllegalArgumentException("Could not download bukkit classes!");
-                }
-            }
-            // parse bukkit-classes-1.17
-            try {
-                parseBukkitClasses(Files.readAllLines(map.toPath()).toArray(new String[0]));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            map = new File(cache, "bukkit-members-" + version);
-            if (!map.exists()) {
-                // grab it.
-                String data = getData(bukkitMembersUrl);
-                try {
-                    Files.write(map.toPath(), data.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new IllegalArgumentException("Could not download bukkit classes!");
-                }
-            }
-            // parse members-1.17
-            try {
-                parseBukkitMembers(Files.readAllLines(map.toPath()).toArray(new String[0]));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             map = new File(cache, "mojang-" + version);
             if (!map.exists()) {
+                System.out.println("Downloading Mojang mappings.");
                 // grab it.
                 String data = getData(mojangUrl);
                 try {
                     Files.write(map.toPath(), data.getBytes());
                 } catch (IOException e) {
                     e.printStackTrace();
-                    throw new IllegalArgumentException("Could not download bukkit classes!");
+                    throw new IllegalArgumentException("Could not download mojang mappings!");
                 }
             }
-            // parse mojang
+            map = new File(cache, "bukkit-classes-" + version);
+            if (!map.exists()) {
+                System.out.println("Downloading Bukkit class mappings.");
+                // grab it.
+                String data = getData(bukkitClassesUrl);
+                try {
+                    Files.write(map.toPath(), data.getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new IllegalArgumentException("Could not download bukkit class mappings!");
+                }
+            }
+            map = new File(cache, "bukkit-members-" + version);
+            if (!map.exists()) {
+                System.out.println("Downloading Bukkit member mappings.");
+                // grab it.
+                String data = getData(bukkitMembersUrl);
+                try {
+                    Files.write(map.toPath(), data.getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new IllegalArgumentException("Could not download bukkit member mappings!");
+                }
+            }
+
+            map = new File(cache, "mojang-" + version);
             try {
+                System.out.println("Parsing Mojang mappings.");
                 parseMojang(Files.readAllLines(map.toPath()).toArray(new String[0]));
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            map = new File(cache, "bukkit-classes-" + version);
+            System.out.println("Parsing Bukkit class mappings.");
+            try {
+                parseBukkitClasses(Files.readAllLines(map.toPath()).toArray(new String[0]));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            map = new File(cache, "bukkit-members-" + version);
+            System.out.println("Parsing Bukkit member mappings.");
+            try {
+                parseBukkitMembers(Files.readAllLines(map.toPath()).toArray(new String[0]));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             // Remove all the reverses - we're done parsing.
             reverseClasses.clear();
 
             // Now combine them.
+            System.out.println("Combining mappings.");
             try {
                 saveCombined(new File(cache, "combined-" + version));
             } catch (IOException e) {
@@ -154,7 +164,7 @@ public class Mappings {
             if (entry.getKey().endsWith(version)) {
                 String[] value = entry.getValue();
                 loadMappings(entry.getKey(),
-                       value[0], value[1], value[2]);
+                        value[0], value[1], value[2]);
                 break;
             }
         }
@@ -182,6 +192,41 @@ public class Mappings {
             switch (type) {
                 case "CL":
                     classes.put(originalClass, new ClassMap(originalClass, obfuscatedClass));
+                    reverseClasses.put(obfuscatedClass, originalClass);
+                    break;
+                case "AL":
+                    // This aliases <original> to a existing <original> (aka obfuscated) class.
+                    ClassMap target3 = classes.get(obfuscatedClass);
+                    if (target3 == null) {
+                        // Try reverse lookup.
+                        target3 = classes.get(reverseClasses.get(key));
+                        if (target3 == null) {
+                            // Figure out if it's a class alias or not.
+                            /*if (!value.equals("true")) {
+                                throw new IllegalArgumentException("Could not find class " + obfuscatedClass);
+                            }*/
+                            // Experiment
+                            if (value.equals("false")) {
+                                classes.put(obfuscatedClass, new ClassMap(obfuscatedClass, key));
+                            } else {
+                                try {
+                                    classes.put(obfuscatedClass, new ClassAlias(obfuscatedClass, key, classes));
+                                } catch (ClassNotFoundException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        } else {
+                            obfuscatedClass = reverseClasses.get(key);
+                        }
+                    }
+                    if (classes.get(originalClass) != null) {
+                        throw new IllegalArgumentException("Class " + originalClass + " already exists.");
+                    }
+                    try {
+                        classes.put(originalClass, new ClassAlias(originalClass, obfuscatedClass, classes));
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 case "MD":
                     ClassMap target = classes.get(originalClass);
@@ -199,20 +244,47 @@ public class Mappings {
                     break;
             }
         }
+        reverseClasses.clear();
     }
 
     private static void saveCombined(File file) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
         dos.writeBytes("# Do not touch this file.\n");
         for (ClassMap map : Mappings.classes.values()) {
-            dos.writeBytes("CL " + map.getOriginal() + " " + map.getObfuscated() + "\n");
-            for (Map.Entry<String, String> m : map.getMethods().entrySet()) {
-                dos.writeBytes("MD " + map.getOriginal() + " " + map.getObfuscated() + " " + m.getKey() + " " + m.getValue() + "\n");
+            if (map instanceof ClassAlias) {
+                // Skip aliases (double pass, but worth it to prevent issues).
+                ClassAlias alias = (ClassAlias) map;
+                String flag = (alias.getAliasMap().isAlias()) ? "true" : "false";
+//            if (flag.equals("false")) {
+//                dos.writeBytes("# " + alias.getAliasMap().getOriginal() + " - "
+//                        + alias.getAliasMap().getObfuscated() + "\n");
+//            }
+                dos.writeBytes("AL " + alias.getOriginal() + " " + alias.getAlias() + " "
+                        + alias.getObfuscated() + " " + flag + "\n");
+                continue;
             }
+            dos.writeBytes("CL " + map.getOriginal() + " " + map.getObfuscated() + "\n");
             for (Map.Entry<String, String> f : map.getFields().entrySet()) {
                 dos.writeBytes("FD " + map.getOriginal() + " " + map.getObfuscated() + " " + f.getKey() + " " + f.getValue() + "\n");
             }
+            for (Map.Entry<String, String> m : map.getMethods().entrySet()) {
+                dos.writeBytes("MD " + map.getOriginal() + " " + map.getObfuscated() + " " + m.getKey() + " " + m.getValue() + "\n");
+            }
         }
+        /*for (ClassMap map : Mappings.classes.values()) {
+            // Only scan for aliases now.
+            if (!map.isAlias()) {
+                continue;
+            }
+            ClassAlias alias = (ClassAlias) map;
+            String flag = (alias.getAliasMap().isAlias()) ? "true" : "false";
+//            if (flag.equals("false")) {
+//                dos.writeBytes("# " + alias.getAliasMap().getOriginal() + " - "
+//                        + alias.getAliasMap().getObfuscated() + "\n");
+//            }
+            dos.writeBytes("AL " + alias.getOriginal() + " " + alias.getAlias() + " "
+                    + alias.getObfuscated() + " " + flag + "\n");
+        }*/
     }
 
     private static void parseBukkitClasses(String[] lines) {
@@ -224,13 +296,29 @@ public class Mappings {
             Matcher m = bukkitClassPattern.matcher(data);
             while (m.find()) {
                 String original = m.group(2).replace("/", ".");
-                if (original.equals("package-info")) {
+                if (original.endsWith("package-info")) {
                     // Skip this.
                     continue;
                 }
                 String obfuscated = m.group(1).replace("/", ".");
-                reverseClasses.put(obfuscated, original);
-                classes.put(original, new ClassMap(original, obfuscated));
+
+                // Check if bukkit renamed this class.
+                ClassMap currentClass = classes.get(original);
+                if (currentClass == null && reverseClasses.containsKey(obfuscated)) {
+                    // If mojang remapped this class, it should become aliased.
+                    String originalName = reverseClasses.get(obfuscated);
+                    try {
+                        classes.put(original, new ClassAlias(original, originalName, classes));
+                        reverseClasses.put(obfuscated, original);
+                        currentClass = classes.get(original);
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (currentClass == null) {
+                    reverseClasses.put(obfuscated, original);
+                    classes.put(original, new ClassMap(original, obfuscated));
+                }
             }
         }
     }
@@ -278,14 +366,19 @@ public class Mappings {
             if (classMatcher.find()) {
                 // Check if bukkit renamed this class.
                 String className = classMatcher.group(1);
-                boolean exists = false;
-                if (reverseClasses.containsKey(classMatcher.group(2))) {
-                    // Okay then use that.
-                    className = reverseClasses.get(classMatcher.group(2));
-                    exists = true;
-                }
                 currentClass = classes.get(className);
-                if (className.equals("package-info")) {
+                /*if (currentClass == null && reverseClasses.containsKey(classMatcher.group(2))) {
+                    // If bukkit remapped this class, it should become aliased.
+                    String originalName = reverseClasses.get(classMatcher.group(2));
+                    try {
+                        classes.put(className, new ClassAlias(className, originalName, classes));
+                        reverseClasses.put(classMatcher.group(2), className);
+                        currentClass = classes.get(className);
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }*/
+                if (className.endsWith("package-info")) {
                     // Skip this.
                     continue;
                 }
@@ -293,12 +386,9 @@ public class Mappings {
                 if (currentClass == null) {
                     // Add class
                     classes.put(className, new ClassMap(className, classMatcher.group(2)));
-                    if (!exists) {
-                        reverseClasses.put(classMatcher.group(2), className);
-                    }
+                    reverseClasses.put(classMatcher.group(2), className);
                     currentClass = classes.get(classMatcher.group(1));
                 }
-
                 //System.out.println("Using " + currentClass.original);
             } else if (currentClass == null) {
                 throw new IllegalArgumentException("Could not find current class while parsing " + line);

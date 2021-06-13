@@ -20,6 +20,10 @@ public class ClassMap {
         this.obfuscated = obfuscated;
     }
 
+    public boolean isAlias() {
+        return false;
+    }
+
     public String getOriginal() {
         return original;
     }
@@ -43,8 +47,6 @@ public class ClassMap {
     public void addField(String original, String obfuscated) {
         this.fields.put(original, obfuscated);
     }
-
-    // Note: We do not support reverse-mappings.
 
     public String getMethod(String original) {
         return this.methods.get(original);

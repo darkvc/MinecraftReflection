@@ -19,7 +19,11 @@ public class TestMappings {
         }*/
         assert Mappings.getClassName("NBTCompressedStreamTools").getMethod("readCompressed").equals("a");
         assert Mappings.getClassName("NBTCompressedStreamTools").getMethod("writeCompressed").equals("a");
+        assert Mappings.getClassName("net.minecraft.nbt.NbtIo").getMethod("readCompressed").equals("a");
+        assert Mappings.getClassName("NbtIo").getMethod("writeCompressed").equals("a");
         assert Mappings.getClassName("Blocks").getField("CYAN_SHULKER_BOX").equals("jn");
+        assert Mappings.getClassName("DifficultyInstance").getField("effectiveDifficulty").equals("e");
+        assert Mappings.getClassName("DifficultyDamageScaler").getField("effectiveDifficulty").equals("e");
         assert Mappings.getClassName("MinecraftServer").getOriginal().equals("net.minecraft.server.MinecraftServer");
         assert Mappings.getExactClassName("net.minecraft.server.MinecraftServer").getOriginal().equals("net.minecraft.server.MinecraftServer");
     }

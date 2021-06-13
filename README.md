@@ -7,6 +7,10 @@ Minecraft 1.17 and above (with backwards compatible).
 This plugin downloads the mappings from Mojang and Spigot and
 builds a combined list of class and method/field mappings.
 
+Because this library pulls both Spigot's and Mojang's mappings, there will be
+class name mapping conflicts.  To fix this, Mojang mappings will take precedence over Spigot/Bukkit mappings, so you are
+highly encouraged to use Mojang specific class/methods/fields names where it is possible.  
+
 TODO: More readme writing.
 
 ## How to install
