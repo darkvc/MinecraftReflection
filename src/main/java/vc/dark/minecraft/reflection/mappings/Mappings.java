@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-/** @noinspection Duplicates*/
 public class Mappings {
 
     private static final Map<String, String[]> versions;
@@ -72,94 +71,6 @@ public class Mappings {
 
         return runtimeMap;
     }
-
-    /*
-    private static void loadMappingsOld(String version, String bukkitClassesUrl, String bukkitMembersUrl, String mojangUrl) {
-        File cache = new File("cached_mcreflect");
-        // Parse 1.17 mappings.
-        File map;
-        map = new File(cache, "combined-" + version);
-        if (map.exists()) {
-            // Load this instead.
-            System.out.println("Loading combined mappings.");
-            try {
-                loadCombined(Files.readAllLines(map.toPath()).toArray(new String[0]));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            map = new File(cache, "mojang-" + version);
-            if (!map.exists()) {
-                System.out.println("Downloading Mojang mappings.");
-                // grab it.
-                String data = getData(mojangUrl);
-                try {
-                    Files.write(map.toPath(), data.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new IllegalArgumentException("Could not download mojang mappings!");
-                }
-            }
-            map = new File(cache, "bukkit-classes-" + version);
-            if (!map.exists()) {
-                System.out.println("Downloading Bukkit class mappings.");
-                // grab it.
-                String data = getData(bukkitClassesUrl);
-                try {
-                    Files.write(map.toPath(), data.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new IllegalArgumentException("Could not download bukkit class mappings!");
-                }
-            }
-            map = new File(cache, "bukkit-members-" + version);
-            if (!map.exists()) {
-                System.out.println("Downloading Bukkit member mappings.");
-                // grab it.
-                String data = getData(bukkitMembersUrl);
-                try {
-                    Files.write(map.toPath(), data.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new IllegalArgumentException("Could not download bukkit member mappings!");
-                }
-            }
-
-            map = new File(cache, "mojang-" + version);
-            try {
-                System.out.println("Parsing Mojang mappings.");
-                parseMojang(Files.readAllLines(map.toPath()).toArray(new String[0]));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            map = new File(cache, "bukkit-classes-" + version);
-            System.out.println("Parsing Bukkit class mappings.");
-            try {
-                parseBukkitClasses(Files.readAllLines(map.toPath()).toArray(new String[0]));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            map = new File(cache, "bukkit-members-" + version);
-            System.out.println("Parsing Bukkit member mappings.");
-            try {
-                parseBukkitMembers(Files.readAllLines(map.toPath()).toArray(new String[0]));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            // Remove all the reverses - we're done parsing.
-            reverseClasses.clear();
-
-            // Now combine them.
-            System.out.println("Combining mappings.");
-            try {
-                saveCombined(new File(cache, "combined-" + version));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-     */
 
     public static void loadMappingsVersion(String version) {
         if (hasMappings()) {
