@@ -1,8 +1,8 @@
 package vc.dark.minecraft.reflection;
 
 import org.bukkit.Bukkit;
-import vc.dark.minecraft.reflection.mappings.ClassMap;
 import vc.dark.minecraft.reflection.mappings.Mappings;
+import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
 import vc.dark.reflection.ReflectClass;
 
 import java.util.Arrays;
@@ -34,19 +34,14 @@ public class MinecraftReflection {
     private static ReflectClass getClassObject(ClassMap map) {
         // Attempt to instantiate the correct object.
         MinecraftReflectClass instance;
-        try {
-            instance = new MinecraftReflectClass(map.getObfuscated(), map);
-        } catch (ClassNotFoundException e) {
-            // Try the other.
+        for (String className : map.getMappings()) {
             try {
-                instance = new MinecraftReflectClass(map.getOriginal(), map);
-            } catch (ClassNotFoundException e2) {
-                e.printStackTrace();
-                e2.printStackTrace();
-                return null;
+                instance = new MinecraftReflectClass(className, map);
+                return instance;
+            } catch (ClassNotFoundException ignored) {
             }
         }
-        return instance;
+        return null;
     }
 
     /* Uses regex and reflection to find all packages which contain the NMS version,
@@ -88,11 +83,11 @@ public class MinecraftReflection {
     }
 
     public static ReflectClass getExactClass(String name) {
-        return getReflectClass(name, Mappings.getExactClassName(name));
+        return getReflectClass(name, Mappings.getExactClassMap(name));
     }
 
     public static ReflectClass getClass(String name) {
-        return getReflectClass(name, Mappings.getClassName(name));
+        return getReflectClass(name, Mappings.getExactClassMap(name));
     }
 
     private static ReflectClass getReflectClass(String name, ClassMap classMap) {
