@@ -107,28 +107,17 @@ public class ReflectClass {
         return this.classObject.getFields();
     }
 
+    /**
+     * @deprecated This method's name will be renamed to method()
+     */
+    @Deprecated
     public Object fuzzyMethod(String name, Object... params) {
-        try {
-            int c = 0;
-            Method found = null;
-            for (Method m : this.classObject.getMethods()) {
-                if (m.getName().equals(name)) {
-                    if (c > 0) {
-                        // More than one found, can't use this.
-                        throw new NoSuchMethodException("More than one matched for " + name);
-                    }
-                    found = m;
-                    c++;
-                }
-            }
-            if (found == null) {
-                throw new NoSuchMethodException("Could not find method " + name);
-            }
-            return found.invoke(this.instance, params);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-            return null;
+        Class<?>[] args = new Class<?>[params.length];
+        int i = 0;
+        for (Object param : params) {
+            args[i++] = param.getClass();
         }
+        return this.method(name, args, params);
     }
 
     public Object method(String name, Class<?>[] args, Object... params) {
