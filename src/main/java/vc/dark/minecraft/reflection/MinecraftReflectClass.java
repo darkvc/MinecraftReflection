@@ -120,23 +120,17 @@ public class MinecraftReflectClass extends ReflectClass {
         return super.field(findField(name));
     }
 
-    /**
-     * @deprecated This is no longer a suitable approach and will likely throw a
-     * UnsupportedException in the future.
-     * Use methodSearch instead.
-     */
-    @Override
-    @Deprecated
-    public Object fuzzyMethod(String name, Object... params) {
-        return super.fuzzyMethod(findMethod(name, null), params);
-    }
-
     @Override
     public Object method(String name, Class<?>[] args, Object... params) {
         return super.method(findMethod(name, args), args, params);
     }
-
+    /**
+     * @deprecated This is no longer a suitable approach and will likely throw a
+     * UnsupportedException in the future.
+     * Use method() instead.
+     */
     @Override
+    @Deprecated
     public Object methodSearch(Class<?>[] args, Object... params) {
         return super.methodSearch(args, params);
     }
