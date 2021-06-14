@@ -12,7 +12,6 @@ import java.util.Map;
 public class MinecraftReflectClass extends ReflectClass {
 
     protected ClassMap mappings;
-    private Map<String, String> alreadyFoundFields = new HashMap<>();
 
     // This should only be called by mappings.
     MinecraftReflectClass(String className, ClassMap map) throws ClassNotFoundException {
@@ -50,20 +49,15 @@ public class MinecraftReflectClass extends ReflectClass {
         if (this.mappings == null) {
             return name;
         }
-        if (alreadyFoundFields.get(name) != null) {
-            return alreadyFoundFields.get(name);
-        }
         // Make sure original method doesn't exist.
         String[] mapped = this.mappings.getFields(name);
         for (String value : mapped) {
             try {
                 this.classObject.getDeclaredField(value);
-                alreadyFoundFields.put(name, value);
                 return value;
             } catch (NoSuchFieldException ignored) {
             }
         }
-        alreadyFoundFields.put(name, name);
         return name;
     }
 
