@@ -1,7 +1,6 @@
 package vc.dark.minecraft.reflection.examples;
 
 import vc.dark.minecraft.reflection.MinecraftReflectClass;
-import vc.dark.minecraft.reflection.mappings.ClassMap;
 
 public class ReflectNBTTagCompound extends MinecraftReflectClass {
     public ReflectNBTTagCompound(Object instance) throws ClassNotFoundException {

@@ -1,18 +1,17 @@
 package vc.dark.minecraft.reflection;
 
-import vc.dark.minecraft.reflection.mappings.ClassMap;
-import vc.dark.minecraft.reflection.mappings.Mappings;
+import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
 import vc.dark.reflection.ReflectClass;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MinecraftReflectClass extends ReflectClass {
 
     protected ClassMap mappings;
-    private Map<String, String> alreadyFoundMethods = new HashMap<>();
     private Map<String, String> alreadyFoundFields = new HashMap<>();
 
     // This should only be called by mappings.
@@ -29,9 +28,9 @@ public class MinecraftReflectClass extends ReflectClass {
     public MinecraftReflectClass(String name, boolean fuzzyNms) throws ClassNotFoundException {
         ReflectClass reflectClass;
         if (!fuzzyNms) {
-             reflectClass = MinecraftReflection.getExactClass(name);
+            reflectClass = MinecraftReflection.getExactClass(name);
         } else {
-             reflectClass = MinecraftReflection.getClass(name);
+            reflectClass = MinecraftReflection.getClass(name);
         }
         this.className = reflectClass.className;
         this.classObject = reflectClass.classObject;
@@ -39,20 +38,6 @@ public class MinecraftReflectClass extends ReflectClass {
             MinecraftReflectClass mcReflect = (MinecraftReflectClass) reflectClass;
             this.mappings = mcReflect.mappings;
         } catch (ClassCastException ignored) {
-        }
-        this.instance = null;
-    }
-
-    @Deprecated
-    public MinecraftReflectClass(String name) throws ClassNotFoundException {
-        ReflectClass reflectClass = MinecraftReflection.getClass(name);
-        this.className = reflectClass.className;
-        this.classObject = reflectClass.classObject;
-        try {
-            MinecraftReflectClass legacy = (MinecraftReflectClass) reflectClass;
-            this.mappings = legacy.mappings;
-        } catch (ClassCastException e) {
-            e.printStackTrace();
         }
         this.instance = null;
     }
@@ -65,88 +50,53 @@ public class MinecraftReflectClass extends ReflectClass {
         if (this.mappings == null) {
             return name;
         }
-        if (name.length() < 4) {
-            return name;
-        }
         if (alreadyFoundFields.get(name) != null) {
             return alreadyFoundFields.get(name);
-        }       // Make sure original method doesn't exist.
-        String res = this.mappings.getField(name);
-        // Test to make sure method exists.
-        if (res == null) {
-            // Pray and hope.
-            return name;
         }
-        // Check which variant
-        for (Field m : this.classObject.getFields()) {
-            if (m.getName().equals(name)) {
-                // Original value exists.
-                alreadyFoundFields.put(name, name);
-                return name;
-            }
-            if (m.getName().equals(res)) {
-                // Mapped value exists.
-                alreadyFoundFields.put(name, res);
-                return res;
+        // Make sure original method doesn't exist.
+        String[] mapped = this.mappings.getFields(name);
+        for (String value : mapped) {
+            try {
+                this.classObject.getDeclaredField(value);
+                alreadyFoundFields.put(name, value);
+                return value;
+            } catch (NoSuchFieldException ignored) {
             }
         }
-        for (Field m : this.classObject.getDeclaredFields()) {
-            if (m.getName().equals(name)) {
-                // Original value exists.
-                alreadyFoundFields.put(name, name);
-                return name;
-            }
-            if (m.getName().equals(res)) {
-                // Mapped value exists.
-                alreadyFoundFields.put(name, res);
-                return res;
-            }
-        }
+        alreadyFoundFields.put(name, name);
         return name;
     }
 
-    private String findMethod(String name) {
+    private String findMethod(String name, Class<?>[] params) {
         if (this.mappings == null) {
             return name;
         }
-        // Slight optimization
-        if (name.length() < 4) {
-            return name;
-        }
-        if (alreadyFoundMethods.get(name) != null) {
-            return alreadyFoundMethods.get(name);
-        }
-        // Make sure original method doesn't exist.
-        String res = this.mappings.getMethod(name);
-        // Test to make sure method exists.
-        if (res == null) {
-            // Pray and hope.
-            return name;
-        }
-        // Check which variant
-        for (Method m : this.classObject.getMethods()) {
-            if (m.getName().equals(name)) {
-                // Original value exists.
-                alreadyFoundMethods.put(name, name);
-                return name;
-            }
-            if (m.getName().equals(res)) {
-                // Mapped value exists.
-                alreadyFoundMethods.put(name, res);
-                return res;
+        String[] mapped = this.mappings.getMethods(name);
+        Method[] methods = this.classObject.getDeclaredMethods();
+        boolean match = false;
+        String retVal = null;
+        for (String value : mapped) {
+            if (params != null) {
+                // Attempt to quickly resolve it:
+                try {
+                    this.classObject.getDeclaredMethod(value, params);
+                    return value;
+                } catch (NoSuchMethodException ignored) {
+                }
+            } else {
+                for (Method m : methods) {
+                    if (m.getName().equals(value)) {
+                        if (match) {
+                            throw new IllegalArgumentException("Found more than one match for " + name + " - cannot use fuzzy search.");
+                        }
+                        retVal = value;
+                        match = true;
+                    }
+                }
             }
         }
-        for (Method m : this.classObject.getDeclaredMethods()) {
-            if (m.getName().equals(name)) {
-                // Original value exists.
-                alreadyFoundMethods.put(name, name);
-                return name;
-            }
-            if (m.getName().equals(res)) {
-                // Mapped value exists.
-                alreadyFoundMethods.put(name, res);
-                return res;
-            }
+        if (retVal != null) {
+            return retVal;
         }
         return name;
     }
@@ -168,7 +118,7 @@ public class MinecraftReflectClass extends ReflectClass {
 
     @Override
     public Object declaredMethod(String name, Class<?>[] args, Object... params) {
-        return super.declaredMethod(findMethod(name), args, params);
+        return super.declaredMethod(findMethod(name, args), args, params);
     }
 
     @Override
@@ -176,14 +126,20 @@ public class MinecraftReflectClass extends ReflectClass {
         return super.field(findField(name));
     }
 
+    /**
+     * @deprecated This is no longer a suitable approach and will likely throw a
+     * UnsupportedException in the future.
+     * Use methodSearch instead.
+     */
     @Override
+    @Deprecated
     public Object fuzzyMethod(String name, Object... params) {
-        return super.fuzzyMethod(findMethod(name), params);
+        return super.fuzzyMethod(findMethod(name, null), params);
     }
 
     @Override
     public Object method(String name, Class<?>[] args, Object... params) {
-        return super.method(findMethod(name), args, params);
+        return super.method(findMethod(name, args), args, params);
     }
 
     @Override

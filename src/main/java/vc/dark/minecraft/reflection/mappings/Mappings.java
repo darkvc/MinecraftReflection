@@ -1,16 +1,19 @@
 package vc.dark.minecraft.reflection.mappings;
 
 import vc.dark.minecraft.reflection.MinecraftReflection;
+import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
+import vc.dark.minecraft.reflection.mappings.parser.*;
+import vc.dark.minecraft.reflection.mappings.runtime.Cache;
+import vc.dark.minecraft.reflection.mappings.runtime.RuntimeMapper;
+import vc.dark.minecraft.reflection.mappings.runtime.RuntimeParser;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Files;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+/** @noinspection Duplicates*/
 public class Mappings {
 
     private static final Map<String, String[]> versions;
@@ -30,8 +33,7 @@ public class Mappings {
         });
     }
 
-    public static Map<String, ClassMap> classes = new HashMap<>();
-    public static Map<String, String> reverseClasses = new HashMap<>();
+    private static Mapper mapper;
 
     private static boolean hasMappings = false;
 
@@ -43,28 +45,36 @@ public class Mappings {
         return versions.keySet().toArray(new String[0]);
     }
 
-    public static ClassMap getExactClassName(String original) {
-        MinecraftReflection.loadMappings();
-        if (!hasMappings()) {
-            return null;
-        }
-        return classes.get(original);
-    }
-
-    public static ClassMap getClassName(String partial) {
-        MinecraftReflection.loadMappings();
-        if (!hasMappings()) {
-            return null;
-        }
-        for (String k : classes.keySet()) {
-            if (k.endsWith("." + partial.substring(0, 1).toUpperCase() + partial.substring(1)) || k.equals(partial)) {
-                return getExactClassName(k);
+    private static Mapper loadMappings(String version, String bukkitClassesUrl, String bukkitMembersUrl,
+                                       String mojangUrl) {
+        Cache newCache;
+        RuntimeMapper runtimeMap = new RuntimeMapper();
+        newCache = new Cache(version);
+        DataWriter out = runtimeMap;
+        if (newCache.cacheExists()) {
+            newCache.parse(null, out);
+        } else {
+            try {
+                newCache.openFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
             }
+            out = new MultiWriter(runtimeMap, newCache);
+            RuntimeParser bukkitOnly = new RuntimeParser(runtimeMap);
+            InternetParser parser = new InternetParser(mojangUrl, new MojangParser());
+            parser.parse(null, out);
+            parser = new InternetParser(bukkitClassesUrl, new BukkitParser());
+            parser.parse(null, bukkitOnly.wrap(out));
+            parser = new InternetParser(bukkitMembersUrl, new BukkitParser());
+            parser.parse(null, bukkitOnly.wrap(out));
         }
-        return null;
+
+        return runtimeMap;
     }
 
-    private static void loadMappings(String version, String bukkitClassesUrl, String bukkitMembersUrl, String mojangUrl) {
+    /*
+    private static void loadMappingsOld(String version, String bukkitClassesUrl, String bukkitMembersUrl, String mojangUrl) {
         File cache = new File("cached_mcreflect");
         // Parse 1.17 mappings.
         File map;
@@ -149,6 +159,7 @@ public class Mappings {
             }
         }
     }
+     */
 
     public static void loadMappingsVersion(String version) {
         if (hasMappings()) {
@@ -163,287 +174,49 @@ public class Mappings {
         for (Map.Entry<String, String[]> entry : versions.entrySet()) {
             if (entry.getKey().endsWith(version)) {
                 String[] value = entry.getValue();
-                loadMappings(entry.getKey(),
+                mapper = loadMappings(entry.getKey(),
                         value[0], value[1], value[2]);
                 break;
             }
         }
-        hasMappings = classes.size() > 0;
+        hasMappings = mapper != null;
         if (!hasMappings) {
-            System.out.println("Could not load mappings.  ");
+            System.out.println("Could not load mappings!");
         }
     }
 
-    private static void loadCombined(String[] lines) {
-        for (String data : lines) {
-            if (data.startsWith("#")) {
-                continue;
-            }
-            String[] whitespace = data.split(" ");
-            String type = whitespace[0];
-            String originalClass = whitespace[1];
-            String obfuscatedClass = whitespace[2];
-            String key = "";
-            String value = "";
-            if (whitespace.length > 3) {
-                key = whitespace[3];
-                value = whitespace[4];
-            }
-            switch (type) {
-                case "CL":
-                    classes.put(originalClass, new ClassMap(originalClass, obfuscatedClass));
-                    reverseClasses.put(obfuscatedClass, originalClass);
-                    break;
-                case "AL":
-                    // This aliases <original> to a existing <original> (aka obfuscated) class.
-                    ClassMap target3 = classes.get(obfuscatedClass);
-                    if (target3 == null) {
-                        // Try reverse lookup.
-                        target3 = classes.get(reverseClasses.get(key));
-                        if (target3 == null) {
-                            // Figure out if it's a class alias or not.
-                            /*if (!value.equals("true")) {
-                                throw new IllegalArgumentException("Could not find class " + obfuscatedClass);
-                            }*/
-                            // Experiment
-                            if (value.equals("false")) {
-                                classes.put(obfuscatedClass, new ClassMap(obfuscatedClass, key));
-                            } else {
-                                try {
-                                    classes.put(obfuscatedClass, new ClassAlias(obfuscatedClass, key, classes));
-                                } catch (ClassNotFoundException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        } else {
-                            obfuscatedClass = reverseClasses.get(key);
-                        }
-                    }
-                    if (classes.get(originalClass) != null) {
-                        throw new IllegalArgumentException("Class " + originalClass + " already exists.");
-                    }
-                    try {
-                        classes.put(originalClass, new ClassAlias(originalClass, obfuscatedClass, classes));
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                case "MD":
-                    ClassMap target = classes.get(originalClass);
-                    if (target == null) {
-                        throw new IllegalArgumentException("Could not find class " + originalClass);
-                    }
-                    target.addMethod(key, value);
-                    break;
-                case "FD":
-                    ClassMap target2 = classes.get(originalClass);
-                    if (target2 == null) {
-                        throw new IllegalArgumentException("Could not find class " + originalClass);
-                    }
-                    target2.addField(key, value);
-                    break;
-            }
-        }
-        reverseClasses.clear();
-    }
-
-    private static void saveCombined(File file) throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
-        dos.writeBytes("# Do not touch this file.\n");
-        for (ClassMap map : Mappings.classes.values()) {
-            if (map instanceof ClassAlias) {
-                // Skip aliases (double pass, but worth it to prevent issues).
-                ClassAlias alias = (ClassAlias) map;
-                String flag = (alias.getAliasMap().isAlias()) ? "true" : "false";
-//            if (flag.equals("false")) {
-//                dos.writeBytes("# " + alias.getAliasMap().getOriginal() + " - "
-//                        + alias.getAliasMap().getObfuscated() + "\n");
-//            }
-                dos.writeBytes("AL " + alias.getOriginal() + " " + alias.getAlias() + " "
-                        + alias.getObfuscated() + " " + flag + "\n");
-                continue;
-            }
-            dos.writeBytes("CL " + map.getOriginal() + " " + map.getObfuscated() + "\n");
-            for (Map.Entry<String, String> f : map.getFields().entrySet()) {
-                dos.writeBytes("FD " + map.getOriginal() + " " + map.getObfuscated() + " " + f.getKey() + " " + f.getValue() + "\n");
-            }
-            for (Map.Entry<String, String> m : map.getMethods().entrySet()) {
-                dos.writeBytes("MD " + map.getOriginal() + " " + map.getObfuscated() + " " + m.getKey() + " " + m.getValue() + "\n");
-            }
-        }
-        /*for (ClassMap map : Mappings.classes.values()) {
-            // Only scan for aliases now.
-            if (!map.isAlias()) {
-                continue;
-            }
-            ClassAlias alias = (ClassAlias) map;
-            String flag = (alias.getAliasMap().isAlias()) ? "true" : "false";
-//            if (flag.equals("false")) {
-//                dos.writeBytes("# " + alias.getAliasMap().getOriginal() + " - "
-//                        + alias.getAliasMap().getObfuscated() + "\n");
-//            }
-            dos.writeBytes("AL " + alias.getOriginal() + " " + alias.getAlias() + " "
-                    + alias.getObfuscated() + " " + flag + "\n");
-        }*/
-    }
-
-    private static void parseBukkitClasses(String[] lines) {
-        Pattern bukkitClassPattern = Pattern.compile("([a-zA-Z0-9/$]+) ([a-zA-Z0-9/$]+)", Pattern.MULTILINE);
-        for (String data : lines) {
-            if (data.startsWith("#")) {
-                continue;
-            }
-            Matcher m = bukkitClassPattern.matcher(data);
-            while (m.find()) {
-                String original = m.group(2).replace("/", ".");
-                if (original.endsWith("package-info")) {
-                    // Skip this.
-                    continue;
-                }
-                String obfuscated = m.group(1).replace("/", ".");
-
-                // Check if bukkit renamed this class.
-                ClassMap currentClass = classes.get(original);
-                if (currentClass == null && reverseClasses.containsKey(obfuscated)) {
-                    // If mojang remapped this class, it should become aliased.
-                    String originalName = reverseClasses.get(obfuscated);
-                    try {
-                        classes.put(original, new ClassAlias(original, originalName, classes));
-                        reverseClasses.put(obfuscated, original);
-                        currentClass = classes.get(original);
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (currentClass == null) {
-                    reverseClasses.put(obfuscated, original);
-                    classes.put(original, new ClassMap(original, obfuscated));
-                }
-            }
-        }
-    }
-
-    private static void parseBukkitMembers(String[] lines) {
-        // Read data line by line
-        for (String line : lines) {
-            if (line.startsWith("#")) {
-                continue;
-            }
-            // Split here
-            String[] whitespace = line.split(" ");
-            String className = whitespace[0].replace("/", ".");
-            String original = whitespace[3];
-            String obfuscated = whitespace[1];
-            //System.out.println("Adding " + className + " method " + original + " -> " + obfuscated);
-            ClassMap currentClass = classes.get(className);
-            // Add class mapping.
-            if (currentClass == null) {
-                throw new IllegalArgumentException("Could not find class " + className + " while parsing " + line);
-//                // Add class
-//                classes.put(className, new ClassMap(className, obfuscated));
-//                reverseClasses.put(obfuscated, className);
-//                currentClass = classes.get(className);
-            }
-            currentClass.addMethod(original, obfuscated);
-        }
-    }
-
-    private static void parseMojang(String[] lines) {
-        Pattern mojangClassPattern = Pattern.compile("([a-z0-9A-Z\\-\\._$]+) -> ([a-z0-9A-Z\\-\\._$]+):", Pattern.MULTILINE);
-        Pattern mojangFieldPattern = Pattern.compile("([a-zA-Z0-9_$]+) -> ([$a-zA-Z0-9_]+)", Pattern.MULTILINE);
-        Pattern mojangMethodPattern = Pattern.compile("([<>a-zA-Z0-9_$]+)[\\(\\)].+ -> ([_a-zA-Z0-9$]+)", Pattern.MULTILINE);
-
-        // Read data line by line
-        ClassMap currentClass = null;
-        for (String line : lines) {
-            if (line.startsWith("#")) {
-                continue;
-            }
-            // Check class
-            Matcher classMatcher = mojangClassPattern.matcher(line);
-            Matcher fieldMatcher = mojangFieldPattern.matcher(line);
-            Matcher methodMatcher = mojangMethodPattern.matcher(line);
-            if (classMatcher.find()) {
-                // Check if bukkit renamed this class.
-                String className = classMatcher.group(1);
-                currentClass = classes.get(className);
-                /*if (currentClass == null && reverseClasses.containsKey(classMatcher.group(2))) {
-                    // If bukkit remapped this class, it should become aliased.
-                    String originalName = reverseClasses.get(classMatcher.group(2));
-                    try {
-                        classes.put(className, new ClassAlias(className, originalName, classes));
-                        reverseClasses.put(classMatcher.group(2), className);
-                        currentClass = classes.get(className);
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }*/
-                if (className.endsWith("package-info")) {
-                    // Skip this.
-                    continue;
-                }
-                // Add class mapping.
-                if (currentClass == null) {
-                    // Add class
-                    classes.put(className, new ClassMap(className, classMatcher.group(2)));
-                    reverseClasses.put(classMatcher.group(2), className);
-                    currentClass = classes.get(classMatcher.group(1));
-                }
-                //System.out.println("Using " + currentClass.original);
-            } else if (currentClass == null) {
-                throw new IllegalArgumentException("Could not find current class while parsing " + line);
-            } else if (fieldMatcher.find()) {
-                String original = fieldMatcher.group(1);
-                String obfuscated = fieldMatcher.group(2);
-                if (original.equals(obfuscated)) {
-                    // Ignore java lang overrides
-                    continue;
-                }
-                currentClass.addField(original, obfuscated);
-            } else if (methodMatcher.find()) {
-                String original = methodMatcher.group(1);
-                String obfuscated = methodMatcher.group(2);
-                if (original.equals(obfuscated)) {
-                    // Ignore java lang overrides
-                    continue;
-                }
-                currentClass.addMethod(original, obfuscated);
-            }
-        }
-    }
-
-
-    private static String getData(String url2) {
-        URL url = null;
-        try {
-            url = new URL(url2);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+    @Deprecated
+    public static Class<?> getClass(String className) throws ClassNotFoundException {
+        MinecraftReflection.loadMappings();
+        if (mapper == null) {
             return null;
         }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        InputStream is = null;
-        try {
-            is = url.openStream();
-            byte[] byteChunk = new byte[4096]; // Or whatever size you want to read in at a time.
-            int n;
+        return mapper.getClass(className);
+    }
 
-            while ((n = is.read(byteChunk)) > 0) {
-                baos.write(byteChunk, 0, n);
-            }
-        } catch (IOException e) {
-            System.err.printf("Failed while reading bytes from %s: %s", url.toExternalForm(), e.getMessage());
-            e.printStackTrace();
-            // Perform any other exception handling that's appropriate.
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+    public static ClassMap getClassMap(String className) {
+        MinecraftReflection.loadMappings();
+        if (mapper == null) {
+            return null;
         }
-        return new String(baos.toByteArray());
+        return mapper.getClassMap(className);
+    }
+
+    @Deprecated
+    public static Class<?> getExactClass(String className) throws ClassNotFoundException {
+        MinecraftReflection.loadMappings();
+        if (mapper == null) {
+            return null;
+        }
+        return mapper.getExactClass(className);
+    }
+
+
+    public static ClassMap getExactClassMap(String className) {
+        MinecraftReflection.loadMappings();
+        if (mapper == null) {
+            return null;
+        }
+        return mapper.getExactClassMap(className);
     }
 }
