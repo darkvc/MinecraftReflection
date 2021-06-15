@@ -1,14 +1,15 @@
 package vc.dark.minecraft.reflection.mappings;
 
+import vc.dark.minecraft.reflection.MinecraftReflectClass;
 import vc.dark.minecraft.reflection.MinecraftReflection;
 import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
 import vc.dark.minecraft.reflection.mappings.parser.*;
 import vc.dark.minecraft.reflection.mappings.runtime.Cache;
 import vc.dark.minecraft.reflection.mappings.runtime.RuntimeMapper;
 import vc.dark.minecraft.reflection.mappings.runtime.RuntimeParser;
+import vc.dark.reflection.ReflectClass;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,10 +62,11 @@ public class Mappings {
             }
             out = new MultiWriter(runtimeMap, newCache);
             RuntimeParser bukkitOnly = new RuntimeParser(runtimeMap);
-            InternetParser parser = new InternetParser(mojangUrl, new MojangParser());
-            parser.parse(null, out);
+            InternetParser parser;
             parser = new InternetParser(bukkitClassesUrl, new BukkitParser());
             parser.parse(null, bukkitOnly.wrap(out));
+            parser = new InternetParser(mojangUrl, new MojangParser());
+            parser.parse(null, out);
             parser = new InternetParser(bukkitMembersUrl, new BukkitParser());
             parser.parse(null, bukkitOnly.wrap(out));
         }
@@ -76,7 +78,7 @@ public class Mappings {
         if (hasMappings()) {
             return;
         }
-        File cache = new File("cached_mcreflect");
+        File cache = Cache.cacheLocation;
         if (!cache.exists()) {
             if (!cache.mkdir()) {
                 throw new IllegalArgumentException("Could not make cache directory (cached_mcreflect)!");
@@ -96,8 +98,7 @@ public class Mappings {
         }
     }
 
-    @Deprecated
-    public static Class<?> getClass(String className) throws ClassNotFoundException {
+    public static MinecraftReflectClass getClass(String className) throws ClassNotFoundException {
         MinecraftReflection.loadMappings();
         if (mapper == null) {
             return null;
@@ -105,16 +106,7 @@ public class Mappings {
         return mapper.getClass(className);
     }
 
-    public static ClassMap getClassMap(String className) {
-        MinecraftReflection.loadMappings();
-        if (mapper == null) {
-            return null;
-        }
-        return mapper.getClassMap(className);
-    }
-
-    @Deprecated
-    public static Class<?> getExactClass(String className) throws ClassNotFoundException {
+    public static MinecraftReflectClass getExactClass(String className) throws ClassNotFoundException {
         MinecraftReflection.loadMappings();
         if (mapper == null) {
             return null;
@@ -122,12 +114,19 @@ public class Mappings {
         return mapper.getExactClass(className);
     }
 
-
-    public static ClassMap getExactClassMap(String className) {
+    public static ClassMap[] getClassMaps(String className) {
         MinecraftReflection.loadMappings();
         if (mapper == null) {
-            return null;
+            return new ClassMap[0];
         }
-        return mapper.getExactClassMap(className);
+        return mapper.getClassMaps(className);
+    }
+
+    public static ClassMap[] getExactClassMaps(String className) {
+        MinecraftReflection.loadMappings();
+        if (mapper == null) {
+            return new ClassMap[0];
+        }
+        return mapper.getExactClassMaps(className);
     }
 }

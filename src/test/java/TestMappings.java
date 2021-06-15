@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 public class TestMappings {
 
+    /*
     public void testMappings() {
         Mappings.loadMappingsVersion("1.17");
         assert Mappings.hasMappings();
@@ -20,23 +21,23 @@ public class TestMappings {
                     //System.out.println(map.original + "." + m.getKey() + " -> " + m.getValue() + "()");
                 }
             }
-        }*/
-        System.out.println(Strings.join(Mappings.getExactClassMap("net.minecraft.world.scores.Scoreboard").getMethods("removePlayerFromTeam"), ","));
-        System.out.println(Strings.join(Mappings.getClassMap("NBTCompressedStreamTools").getMethods("write"), ","));
-        System.out.println(Strings.join(Mappings.getClassMap("NbtIo").getMethods("write"), ","));
-        System.out.println(Strings.join(Mappings.getClassMap("BlockFire").getFields("flameOdds"), ","));
-        System.out.println(Strings.join(Mappings.getClassMap("NBTCompressedStreamTools").getMethods("readCompressed"), ","));
-        System.out.println(Strings.join(Mappings.getClassMap("ServerLoginPacketListenerImpl").getMethods("tick"), ","));
-        System.out.println(Strings.join(Mappings.getClassMap("LoginListener").getMethods("tick"), ","));
-        System.out.println(Strings.join(Mappings.getClassMap("MinecraftServer").getMethods("setMotd"), ","));
-        assert Arrays.asList(Mappings.getClassMap("NBTCompressedStreamTools").getMethods("readCompressed")).contains("a");
-        assert Arrays.asList(Mappings.getClassMap("NBTCompressedStreamTools").getMethods("writeCompressed")).contains("a");
-        assert Arrays.asList(Mappings.getClassMap("net.minecraft.nbt.NbtIo").getMethods("readCompressed")).contains("a");
-        assert Arrays.asList(Mappings.getClassMap("NbtIo").getMethods("writeCompressed")).contains("a");
-        assert Arrays.asList(Mappings.getClassMap("Blocks").getFields("CYAN_SHULKER_BOX")).contains("jn");
-        assert Arrays.asList(Mappings.getClassMap("DifficultyInstance").getFields("effectiveDifficulty")).contains("e");
-        assert Arrays.asList(Mappings.getClassMap("DifficultyDamageScaler").getFields("effectiveDifficulty")).contains("e");
-        assert Arrays.asList(Mappings.getClassMap("MinecraftServer").getOriginals()).contains("net.minecraft.server.MinecraftServer");
-        assert Arrays.asList(Mappings.getExactClassMap("net.minecraft.server.MinecraftServer").getOriginals()).contains("net.minecraft.server.MinecraftServer");
-    }
+        }
+        System.out.println(Strings.join(Mappings.getExactClassMaps("net.minecraft.world.scores.Scoreboard").getMethods("removePlayerFromTeam"), ","));
+        System.out.println(Strings.join(Mappings.getClassMaps("NBTCompressedStreamTools").getMethods("write"), ","));
+        System.out.println(Strings.join(Mappings.getClassMaps("NbtIo").getMethods("write"), ","));
+        System.out.println(Strings.join(Mappings.getClassMaps("BlockFire").getFields("flameOdds"), ","));
+        System.out.println(Strings.join(Mappings.getClassMaps("NBTCompressedStreamTools").getMethods("readCompressed"), ","));
+        System.out.println(Strings.join(Mappings.getClassMaps("ServerLoginPacketListenerImpl").getMethods("tick"), ","));
+        System.out.println(Strings.join(Mappings.getClassMaps("LoginListener").getMethods("tick"), ","));
+        System.out.println(Strings.join(Mappings.getClassMaps("MinecraftServer").getMethods("setMotd"), ","));
+        assert Arrays.asList(Mappings.getClassMaps("NBTCompressedStreamTools").getMethods("readCompressed")).contains("a");
+        assert Arrays.asList(Mappings.getClassMaps("NBTCompressedStreamTools").getMethods("writeCompressed")).contains("a");
+        assert Arrays.asList(Mappings.getClassMaps("net.minecraft.nbt.NbtIo").getMethods("readCompressed")).contains("a");
+        assert Arrays.asList(Mappings.getClassMaps("NbtIo").getMethods("writeCompressed")).contains("a");
+        assert Arrays.asList(Mappings.getClassMaps("Blocks").getFields("CYAN_SHULKER_BOX")).contains("jn");
+        assert Arrays.asList(Mappings.getClassMaps("DifficultyInstance").getFields("effectiveDifficulty")).contains("e");
+        assert Arrays.asList(Mappings.getClassMaps("DifficultyDamageScaler").getFields("effectiveDifficulty")).contains("e");
+        assert Arrays.asList(Mappings.getClassMaps("MinecraftServer").getOriginals()).contains("net.minecraft.server.MinecraftServer");
+        assert Arrays.asList(Mappings.getExactClassMaps("net.minecraft.server.MinecraftServer").getOriginals()).contains("net.minecraft.server.MinecraftServer");
+    }*/
 }

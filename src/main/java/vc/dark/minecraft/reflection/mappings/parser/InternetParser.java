@@ -39,7 +39,7 @@ public class InternetParser implements DataParser {
         InputStream is = null;
         try {
             is = url.openStream();
-            byte[] byteChunk = new byte[4096]; // Or whatever size you want to read in at a time.
+            byte[] byteChunk = new byte[4096];
             int n;
 
             while ((n = is.read(byteChunk)) > 0) {
@@ -48,7 +48,6 @@ public class InternetParser implements DataParser {
         } catch (IOException e) {
             System.err.printf("Failed while reading bytes from %s: %s", url.toExternalForm(), e.getMessage());
             e.printStackTrace();
-            // Perform any other exception handling that's appropriate.
         } finally {
             if (is != null) {
                 try {

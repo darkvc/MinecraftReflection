@@ -1,11 +1,9 @@
 package vc.dark.minecraft.reflection.mappings.classmap;
 
+import com.google.common.collect.LinkedHashMultimap;
 import joptsimple.internal.Strings;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class NestedEntryMap extends EntryMap {
 
@@ -23,86 +21,41 @@ public abstract class NestedEntryMap extends EntryMap {
         return new EntryMap(obfuscated, original);
     }
 
-    protected void addMapping(String original, String obfuscated, Map<String, EntryMap> mappings,
-                              Map<String, EntryMap> dupes) {
-        EntryMap existing = mappings.get(original);
-        EntryMap obfExisting = mappings.get(obfuscated);
-        if (existing != null) {
-            if (!Arrays.asList(existing.getObfuscated()).contains(obfuscated)) {
-                if (dupes == null) {
-                    throw new RuntimeException("Duplicate detected! Mapping " + original + " points to " + obfuscated + " " +
-                            "but this mapping already exists: " + original + " -> " + Strings.join(existing.getObfuscated(), ","));
-                } else {
-                    // Add as a duplicate mapping.
-                    if (strictDupes) {
-                        if (dupes.get(original) != null) {
-                            if (!Arrays.asList(dupes.get(original).getObfuscated()).contains(obfuscated)) {
-                                throw new RuntimeException("Multiple Duplicates detected! Mapping " + original + " points to " + obfuscated + " " +
-                                        "but this mapping already exists: " + original + " -> " + Strings.join(existing.getObfuscated(), ",")
-                                        + " as well as this duplicate: " + original + " -> " +
-                                        Strings.join(dupes.get(original).getObfuscated(), ","));
-                            }
-                            return;
-                        }
-                        if (obfExisting == null) {
-                            mappings.put(obfuscated, constructNewEntry(obfuscated, original));
-                            obfExisting = mappings.get(obfuscated);
-                        } else {
-                            obfExisting.addOriginal(original);
-                            obfExisting.addObfuscated(obfuscated);
-                        }
-                        dupes.put(original, obfExisting);
-                    } else {
-                        if (obfExisting == null) {
-                            mappings.put(obfuscated, constructNewEntry(obfuscated, original));
-                            obfExisting = mappings.get(obfuscated);
-                        } else {
-                            obfExisting.addOriginal(original);
-                            obfExisting.addObfuscated(obfuscated);
-                        }
-                        if (dupes.get(original) == null) {
-                            dupes.put(original, obfExisting);
-                        } else {
-                            EntryMap dupe = dupes.get(original);
-                        }
+    protected void addMapping(String original, String obfuscated, LinkedHashMultimap<String, EntryMap> mappings,
+                            boolean batchDupes) {
+        if (mappings.containsKey(original)) {
+            if (batchDupes) {
+                for (EntryMap existing : mappings.get(original)) {
+                    if (!existing.hasObfuscated(obfuscated)) {
+                        existing.addObfuscated(obfuscated);
                     }
-                    return;
                 }
             } else {
-                //throw new RuntimeException("Duplicate obf&name detected! Mapping " + original + " points to " + obfuscated + " " +
-                 //       "but this mapping already exists: " + original + " -> " + existing.getObfuscated());
+                for (EntryMap existing : mappings.get(original)) {
+                    if (existing.hasObfuscated(obfuscated)) {
+                        return;
+                    }
+                }
+                mappings.put(original, constructNewEntry(obfuscated, original));
             }
         }
-
-        if (obfExisting != null) {
-            // Add as a new original.
-            obfExisting.addOriginal(original);
-            mappings.put(original, obfExisting);
-            return;
+        else {
+            mappings.put(original, constructNewEntry(obfuscated, original));
         }
-        // New mapping.
-        mappings.put(obfuscated, constructNewEntry(obfuscated, original));
-        mappings.put(original, mappings.get(obfuscated));
     }
 
-    protected String[] getMappings(String original, Map<String, EntryMap> mappings, Map<String, EntryMap> dupes) {
-        EntryMap entry = mappings.get(original);
-        if (entry == null) {
-            return null;
-        }
-        if (dupes != null) {
-            EntryMap existingDupe = dupes.get(original);
-            List<String> combined = new ArrayList<>();
-            combined.addAll(Arrays.asList(entry.getObfuscated()));
-            if (existingDupe != null)  {
-                combined.addAll(Arrays.asList(existingDupe.getObfuscated()));
+    protected String[] getMappings(String original, LinkedHashMultimap<String, EntryMap> mappings) {
+        List<String> origmap = new ArrayList<>();
+        List<String> obfmap = new ArrayList<>();
+        if (mappings.containsKey(original)) {
+            for (EntryMap entry : mappings.get(original)) {
+                origmap.add(entry.getOriginal());
+                obfmap.addAll(entry.getObfuscated());
             }
-            combined.addAll(Arrays.asList(entry.getOriginals()));
-            if (existingDupe != null)  {
-                combined.addAll(Arrays.asList(existingDupe.getOriginals()));
-            }
-            return combined.toArray(new String[0]);
+            obfmap.addAll(origmap);
+            return obfmap.toArray(new String[0]);
+        } else {
+            return new String[0];
         }
-        return entry.getMappings();
     }
 }

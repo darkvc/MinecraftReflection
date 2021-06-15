@@ -12,9 +12,8 @@ import java.util.Map;
 
 public class Cache implements DataWriter, DataParser {
 
-    private static File cacheLocation = new File("cached_mcreflect");
+    public static File cacheLocation = new File("cached_mcreflect");
     private RuntimeMapper runtimeMapper = new RuntimeMapper();
-    private Map<String, Boolean> visitedClasses = new HashMap<>();
     private DataOutputStream dos;
     private File cacheFile;
 
@@ -29,43 +28,12 @@ public class Cache implements DataWriter, DataParser {
 
     @Override
     public void clazz(String originalClass, String obfuscatedClass) {
-        ClassMap dupe = (ClassMap) runtimeMapper.getDuplicateClasses().get(originalClass);
-        ClassMap existing = (ClassMap) runtimeMapper.getClasses().get(originalClass);
-        ClassMap obfExisting = (ClassMap) runtimeMapper.getClasses().get(obfuscatedClass);
-        if (dupe != null && existing != null && obfExisting != null) {
-            throw new RuntimeException("Not sure what to do here. " + originalClass + " -> " + obfuscatedClass + "["
-            + Strings.join(dupe.getMappings(), ",") + "] " +  "["
-                    + Strings.join(existing.getMappings(), ",") + "] ");
-        }
-        boolean justCreated = false;
-        if (dupe == null && (existing == null || obfExisting == null)) {
-            runtimeMapper.clazz(originalClass, obfuscatedClass);
-            existing = (ClassMap) runtimeMapper.getClasses().get(originalClass);
-            obfExisting = (ClassMap) runtimeMapper.getClasses().get(obfuscatedClass);
-            justCreated = true;
-        }
+        runtimeMapper.clazz(originalClass, obfuscatedClass);
         try {
             dos.writeBytes("CL " + originalClass + " " + obfuscatedClass + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        /*if (dupe != null) {
-            // Flag as dupe.
-            try {
-                dos.writeBytes("DU " + originalClass + " " + obfuscatedClass + "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else if (!justCreated) {
-            try {
-                dos.writeBytes("AL " + originalClass + " " + obfuscatedClass + "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            visitedClasses.put(originalClass, true);
-        } else {
-
-        }*/
     }
 
     @Override
@@ -89,14 +57,8 @@ public class Cache implements DataWriter, DataParser {
     }
 
     private void checkClassExists(String originalClass, String obfuscatedClass) {
-        ClassMap map = runtimeMapper.getExactClassMap(originalClass);
-        ClassMap obfExisting = runtimeMapper.getExactClassMap(obfuscatedClass);
-        if (map == null || obfExisting == null) {
+        if (runtimeMapper.getExactClassMaps(originalClass).length < 1)
             this.clazz(originalClass, obfuscatedClass);
-            map = runtimeMapper.getExactClassMap(originalClass);
-            obfExisting = runtimeMapper.getExactClassMap(obfuscatedClass);
-        }
-
     }
 
     public boolean cacheExists() {
@@ -133,12 +95,6 @@ public class Cache implements DataWriter, DataParser {
                 case "CL":
                     out.clazz(originalClass, obfuscatedClass);
                     break;
-//                case "AL":
-//                    // Alias/extra original mapping.
-//                    break;
-//                case "DU":
-//                    // Duplicate mapping.
-//                    break;
                 case "MD":
                     if (whitespace.length <= 3) {
                         throw new IllegalArgumentException("Could not parse line " + data);

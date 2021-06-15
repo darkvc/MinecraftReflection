@@ -30,12 +30,12 @@ public class RuntimeParser {
             @Override
             public void field(String originalClass, String obfuscatedClass, String fieldOriginal, String fieldObfuscated) {
                 if (obfuscatedClass.equals("")) {
-                    ClassMap existing = obfHelper.getExactClassMap(originalClass);
-                    if (existing == null) {
+                    // Brace for impact.
+                    ClassMap[] existing = obfHelper.getExactClassMaps(originalClass);
+                    if (existing.length < 1) {
                         throw new IllegalArgumentException("Could not find original class: " + originalClass);
                     }
-                    // Get first obfuscated value, if missing
-                    obfuscatedClass = existing.getObfuscated()[0];
+                    obfuscatedClass = existing[0].getObfuscated().get(0);
                 }
                 parser.field(originalClass, obfuscatedClass, fieldOriginal, fieldObfuscated);
             }
@@ -43,12 +43,12 @@ public class RuntimeParser {
             @Override
             public void method(String originalClass, String obfuscatedClass, String methodOriginal, String methodObfuscated) {
                 if (obfuscatedClass.equals("")) {
-                    ClassMap existing = obfHelper.getExactClassMap(originalClass);
-                    if (existing == null) {
+                    // Brace for impact.
+                    ClassMap[] existing = obfHelper.getExactClassMaps(originalClass);
+                    if (existing.length < 1) {
                         throw new IllegalArgumentException("Could not find original class: " + originalClass);
                     }
-                    // Get first obfuscated value, if missing
-                    obfuscatedClass = existing.getObfuscated()[0];
+                    obfuscatedClass = existing[0].getObfuscated().get(0);
                 }
                 parser.method(originalClass, obfuscatedClass, methodOriginal, methodObfuscated);
             }
