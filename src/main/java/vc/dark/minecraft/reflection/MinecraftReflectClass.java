@@ -14,14 +14,18 @@ public class MinecraftReflectClass extends ReflectClass {
     protected ClassMap mappings;
 
     // This should only be called by mappings.
-    MinecraftReflectClass(String className, ClassMap map) throws ClassNotFoundException {
-        super(className);
+    public MinecraftReflectClass(Class<?> clazz, ClassMap map) {
+        super(clazz);
         this.mappings = map;
     }
 
     private MinecraftReflectClass(Object e, MinecraftReflectClass existing) {
         super(e);
         this.mappings = existing.mappings;
+    }
+
+    public ClassMap getMappings() {
+        return mappings;
     }
 
     public MinecraftReflectClass(String name, boolean fuzzyNms) throws ClassNotFoundException {
@@ -45,7 +49,7 @@ public class MinecraftReflectClass extends ReflectClass {
         return new MinecraftReflectClass(b, this);
     }
 
-    private String findField(String name) {
+    public String findField(String name) {
         if (this.mappings == null) {
             return name;
         }
@@ -61,7 +65,7 @@ public class MinecraftReflectClass extends ReflectClass {
         return name;
     }
 
-    private String findMethod(String name, Class<?>[] params) {
+    public String findMethod(String name, Class<?>[] params) {
         if (this.mappings == null) {
             return name;
         }

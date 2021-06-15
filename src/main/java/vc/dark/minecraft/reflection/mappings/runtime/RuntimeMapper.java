@@ -1,30 +1,26 @@
 package vc.dark.minecraft.reflection.mappings.runtime;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.LinkedHashMultimap;
 import joptsimple.internal.Strings;
+import vc.dark.minecraft.reflection.MinecraftReflectClass;
 import vc.dark.minecraft.reflection.mappings.Mapper;
 import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
 import vc.dark.minecraft.reflection.mappings.classmap.EntryMap;
 import vc.dark.minecraft.reflection.mappings.classmap.NestedEntryMap;
 import vc.dark.minecraft.reflection.mappings.parser.DataWriter;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RuntimeMapper extends NestedEntryMap implements Mapper, DataWriter {
-    private Map<String, EntryMap> classes = new HashMap<>();
-    private Map<String, EntryMap> duplicateClasses = new HashMap<>();
+    private LinkedHashMultimap<String, EntryMap> classes = LinkedHashMultimap.create();
 
     public RuntimeMapper() {
         super(true);
     }
 
-    public Map<String, EntryMap> getClasses() {
-        return classes;
-    }
-
-    public Map<String, EntryMap> getDuplicateClasses() {
-        return duplicateClasses;
+    public Map<String, Collection<EntryMap>> getClasses() {
+        return Collections.unmodifiableMap(classes.asMap());
     }
 
     @Override
@@ -32,89 +28,99 @@ public class RuntimeMapper extends NestedEntryMap implements Mapper, DataWriter 
         return new ClassMap(obfuscated, original);
     }
 
-    private ClassMap resolveClassMap(String name) {
-        ClassMap result = (ClassMap) duplicateClasses.get(name);
-        if (result == null) {
-            return (ClassMap) classes.get(name);
-        }
-        return result;
-    }
-
     @Override
     public void clazz(String originalClass, String obfuscatedClass) {
-        addMapping(originalClass, obfuscatedClass, classes, duplicateClasses);
+        addMapping(originalClass, obfuscatedClass, classes, false);
     }
 
     @Override
     public void field(String originalClass, String obfuscatedClass, String fieldOriginal, String fieldObfuscated) {
-        ClassMap map = getExactClassMap(originalClass);
+        Preconditions.checkArgument(!obfuscatedClass.equals(""));
+        ClassMap map = getExactObfClassMap(originalClass, obfuscatedClass);
         if (map == null) {
             clazz(originalClass, obfuscatedClass);
-            map = getExactClassMap(originalClass);
+            map = getExactObfClassMap(originalClass, obfuscatedClass);
         }
         map.addField(fieldOriginal, fieldObfuscated);
     }
 
     @Override
     public void method(String originalClass, String obfuscatedClass, String methodOriginal, String methodObfuscated) {
-        ClassMap map = getExactClassMap(originalClass);
+        Preconditions.checkArgument(!obfuscatedClass.equals(""));
+        ClassMap map = getExactObfClassMap(originalClass, obfuscatedClass);
         if (map == null) {
             clazz(originalClass, obfuscatedClass);
-            map = getExactClassMap(originalClass);
+            map = getExactObfClassMap(originalClass, obfuscatedClass);
         }
         map.addMethod(methodOriginal, methodObfuscated);
     }
 
     @Override
-    public Class<?> getClass(String className) throws ClassNotFoundException {
-        return getExactClass(getClassMap(className));
+    public MinecraftReflectClass getClass(String className) throws ClassNotFoundException {
+        return getReflectClass(getClassMaps(className));
     }
 
     @Override
-
-    public Class<?> getExactClass(String className) throws ClassNotFoundException {
-        return getExactClass(getExactClassMap(className));
+    public MinecraftReflectClass getExactClass(String className) throws ClassNotFoundException {
+        return getReflectClass(getExactClassMaps(className));
     }
 
-    @Override
-    public ClassMap getClassMap(String partial) {
-        String search = "." + partial.substring(0, 1).toUpperCase() + partial.substring(1);
-        for (String k : duplicateClasses.keySet()) {
-            if (k.endsWith(search) || k.equals(partial)) {
-                return getExactClassMap(k);
+    private MinecraftReflectClass getReflectClass(ClassMap[] maps) throws ClassNotFoundException {
+        if (maps.length < 1) {
+            return null;
+        }
+
+        List<String> errorMap = new ArrayList<>();
+        for (ClassMap map : maps) {
+            errorMap.addAll(Arrays.asList(map.getMappings()));
+            for (String mapping : map.getMappings()) {
+                try {
+                    Class<?> clazz = Class.forName(mapping);
+                    if (clazz == null) {
+                        throw new ClassNotFoundException("Could not find class " + mapping);
+                    } else {
+                        return new MinecraftReflectClass(clazz, map);
+                    }
+                } catch (ClassNotFoundException ignored) {
+                }
             }
         }
+
+        throw new ClassNotFoundException("Could not find any of these classes: ["
+                + Strings.join(errorMap, ",") + "]");
+    }
+
+    @Override
+    public ClassMap[] getClassMaps(String partial) {
+        String search = "." + partial.substring(0, 1).toUpperCase() + partial.substring(1);
         for (String k : classes.keySet()) {
             if (k.endsWith(search) || k.equals(partial)) {
-                return getExactClassMap(k);
+                return getExactClassMaps(k);
+            }
+        }
+        return null;
+    }
+
+    ClassMap getExactObfClassMap(String className, String obfuscated) {
+        ClassMap[] entries = getExactClassMaps(className);
+        for (ClassMap existing : entries) {
+            if (existing.getObfuscated().contains(obfuscated)) {
+                return existing;
             }
         }
         return null;
     }
 
     @Override
-    public ClassMap getExactClassMap(String className) {
-        return resolveClassMap(className);
-    }
-
-    private Class<?> getExactClass(ClassMap map) throws ClassNotFoundException {
-        if (map == null) {
-            return null;
-        }
-
-        for (String mapping : map.getMappings()) {
-            try {
-                Class<?> clazz = Class.forName(mapping);
-                if (clazz == null) {
-                    throw new ClassNotFoundException("Could not find class " + mapping);
-                } else {
-                    return clazz;
-                }
-            } catch (ClassNotFoundException ignored) {
+    public ClassMap[] getExactClassMaps(String className) {
+        if (classes.containsKey(className)) {
+            // Sigh.
+            List<ClassMap> e = new ArrayList<>();
+            for (EntryMap g : classes.get(className)) {
+                e.add((ClassMap) g);
             }
+            return e.toArray(new ClassMap[0]);
         }
-
-        throw new ClassNotFoundException("Could not find classes in mapping: ["
-                + Strings.join(map.getMappings(), ",") + "]");
+        return new ClassMap[0];
     }
 }

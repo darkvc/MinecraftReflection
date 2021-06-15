@@ -3,6 +3,7 @@ package vc.dark.minecraft.reflection;
 import org.bukkit.Bukkit;
 import vc.dark.minecraft.reflection.mappings.Mappings;
 import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
+import vc.dark.minecraft.reflection.test.ReflectionTester;
 import vc.dark.reflection.ReflectClass;
 
 import java.util.Arrays;
@@ -29,19 +30,6 @@ public class MinecraftReflection {
 
     public static boolean hasMappings() {
         return Mappings.hasMappings();
-    }
-
-    private static ReflectClass getClassObject(ClassMap map) {
-        // Attempt to instantiate the correct object.
-        MinecraftReflectClass instance;
-        for (String className : map.getMappings()) {
-            try {
-                instance = new MinecraftReflectClass(className, map);
-                return instance;
-            } catch (ClassNotFoundException ignored) {
-            }
-        }
-        return null;
     }
 
     /* Uses regex and reflection to find all packages which contain the NMS version,
@@ -83,28 +71,41 @@ public class MinecraftReflection {
     }
 
     public static ReflectClass getExactClass(String name) {
-        return getReflectClass(name, Mappings.getExactClassMap(name));
+        return getReflectClass(name, true);
     }
 
     public static ReflectClass getClass(String name) {
-        return getReflectClass(name, Mappings.getExactClassMap(name));
+        return getReflectClass(name, false);
     }
 
-    private static ReflectClass getReflectClass(String name, ClassMap classMap) {
+    private static ReflectClass getReflectClass(String name, boolean exact) {
         if (name == null) {
             return null;
         }
         name = name.replace("net.minecraft.server.%s.", "");
-        if (!Mappings.hasMappings() || classMap == null) {
+        if (!Mappings.hasMappings()) {
             return new ReflectClass(getLegacyNmsClass("net.minecraft.server.%s." + name));
         }
-        return getClassObject(classMap);
+        try {
+            if (!exact) {
+                return Mappings.getClass(name);
+            } else {
+                return Mappings.getExactClass(name);
+            }
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
     }
 
     public static void main(String[] args) {
         // Simple CLI tool to save mappings.
         if (args.length < 1) {
             System.out.println("Usage: java -jar MinecraftReflection.jar [list|1.17]");
+            return;
+        }
+        if (args[0].equals("test")) {
+            ReflectionTester tester = new ReflectionTester();
+            tester.test();
             return;
         }
         if (args[0].equals("list")) {

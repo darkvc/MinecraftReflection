@@ -1,52 +1,68 @@
 package vc.dark.minecraft.reflection.mappings.classmap;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class EntryMap {
 
-    private List<String> obfuscated;
-    private List<String> originals;
+    private String original;
+    private HashSet<String> obfuscated;
 
     protected EntryMap() {
-
+        // For custom implementations that do *not* need LinkedHashMultiMap!
     }
 
     public EntryMap(String obfuscated, String original) {
-        this.obfuscated = new ArrayList<>();
-        this.originals = new ArrayList<>();
-        this.obfuscated.add(obfuscated);
-        this.originals.add(original);
+        this.original = original;
+        this.obfuscated = new HashSet<>();
+        addObfuscated(obfuscated);
     }
 
-    public void addOriginal(String newOriginal) {
-        if (originals.contains(newOriginal)) {
-            return;
+    public void addObfuscated(String value) {
+        if (this.obfuscated != null) {
+            this.obfuscated.add(value);
         }
-        originals.add(newOriginal);
     }
 
-    public void addObfuscated(String newObf) {
-        if (obfuscated.contains(newObf)) {
-            return;
+    public String getOriginal() {
+        return this.original;
+    }
+
+    public List<String> getObfuscated() {
+        if (obfuscated == null) {
+            return Collections.emptyList();
         }
-        obfuscated.add(newObf);
+        return new ArrayList<>(obfuscated);
     }
 
-    public String[] getOriginals() {
-        return originals.toArray(new String[0]);
-    }
-
-    public String[] getObfuscated() {
-        return obfuscated.toArray(new String[0]);
+    public boolean hasObfuscated(String v) {
+        if (obfuscated == null) {
+            return false;
+        }
+        return obfuscated.contains(v);
     }
 
     public String[] getMappings() {
-        List<String> result = new ArrayList<>();
+        if (obfuscated == null) {
+            return new String[0];
+        }
         // Prefer mojang obfuscation first.
+        List<String> result = new ArrayList<>();
+        result.add(original);
         result.addAll(obfuscated);
-        result.addAll(originals);
         return result.toArray(new String[0]);
+    }
+
+    public String toString() {
+        return Arrays.toString(this.getMappings());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        } else if (!(obj instanceof EntryMap)) {
+            return false;
+        }
+        return obj.toString().equals(this.toString());
     }
 }

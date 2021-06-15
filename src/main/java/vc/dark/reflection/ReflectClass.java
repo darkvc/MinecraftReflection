@@ -13,26 +13,28 @@ public class ReflectClass {
     }
 
     public ReflectClass(Class<?> instance) {
-        this.className = instance.getCanonicalName();
+        this.className = instance.getName();
         this.classObject = instance;
         this.instance = null;
     }
 
     public ReflectClass(Object instance) {
-        this.className = instance.getClass().getCanonicalName();
+        this.className = instance.getClass().getName();
         this.classObject = instance.getClass();
         this.instance = instance;
     }
 
     public ReflectClass(String path) throws ClassNotFoundException {
         this.classObject = Class.forName(path);
-        this.className = this.classObject.getCanonicalName();
+        this.className = this.classObject.getName();
         this.instance = null;
     }
 
     public Class getTargetClass() {
         return this.classObject;
     }
+
+    public String getClassName() { return this.className; }
 
     public void setInstance(Object newInstance) {
         this.instance = newInstance;
@@ -105,6 +107,10 @@ public class ReflectClass {
 
     public Field[] getFields() {
         return this.classObject.getFields();
+    }
+
+    public Method[] getMethods() {
+        return this.classObject.getMethods();
     }
 
     /**
