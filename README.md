@@ -11,6 +11,9 @@ Because this library pulls both Spigot's and Mojang's mappings, there will be
 class name mapping conflicts.  To fix this, duplicate mappings are stored together, and then 
 each duplicate class/method/field will be tested.
 
+Note: Not all classes defined will be accessible at runtime, as some class names may have had
+their names changed, and in some _cases_, class names are changed like this: `n.m.s.EULA` -> `n.m.s.Eula`. 
+
 TODO: More readme writing.
 
 ## How to install
