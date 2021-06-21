@@ -1,14 +1,13 @@
-package vc.dark.minecraft.reflection.mappings.runtime;
+package vc.dark.minecraft.reflection.mappings.mapper;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.LinkedHashMultimap;
-import joptsimple.internal.Strings;
-import vc.dark.minecraft.reflection.MinecraftReflectClass;
-import vc.dark.minecraft.reflection.mappings.Mapper;
 import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
 import vc.dark.minecraft.reflection.mappings.classmap.EntryMap;
 import vc.dark.minecraft.reflection.mappings.classmap.NestedEntryMap;
 import vc.dark.minecraft.reflection.mappings.parser.DataWriter;
+import vc.dark.minecraft.reflection.mappings.runtime.RuntimeReflectUtils;
+import vc.dark.reflection.ReflectClass;
 
 import java.util.*;
 
@@ -16,7 +15,6 @@ public class RuntimeMapper extends NestedEntryMap implements Mapper, DataWriter 
     private LinkedHashMultimap<String, EntryMap> classes = LinkedHashMultimap.create();
 
     public RuntimeMapper() {
-        super(true);
     }
 
     public Map<String, Collection<EntryMap>> getClasses() {
@@ -56,38 +54,13 @@ public class RuntimeMapper extends NestedEntryMap implements Mapper, DataWriter 
     }
 
     @Override
-    public MinecraftReflectClass getClass(String className) throws ClassNotFoundException {
-        return getReflectClass(getClassMaps(className));
+    public ReflectClass getClass(String className) throws ClassNotFoundException {
+        return RuntimeReflectUtils.getReflectClass(getClassMaps(className));
     }
 
     @Override
-    public MinecraftReflectClass getExactClass(String className) throws ClassNotFoundException {
-        return getReflectClass(getExactClassMaps(className));
-    }
-
-    private MinecraftReflectClass getReflectClass(ClassMap[] maps) throws ClassNotFoundException {
-        if (maps.length < 1) {
-            return null;
-        }
-
-        List<String> errorMap = new ArrayList<>();
-        for (ClassMap map : maps) {
-            errorMap.addAll(Arrays.asList(map.getMappings()));
-            for (String mapping : map.getMappings()) {
-                try {
-                    Class<?> clazz = Class.forName(mapping);
-                    if (clazz == null) {
-                        throw new ClassNotFoundException("Could not find class " + mapping);
-                    } else {
-                        return new MinecraftReflectClass(clazz, map);
-                    }
-                } catch (ClassNotFoundException ignored) {
-                }
-            }
-        }
-
-        throw new ClassNotFoundException("Could not find any of these classes: ["
-                + Strings.join(errorMap, ",") + "]");
+    public ReflectClass getExactClass(String className) throws ClassNotFoundException {
+        return RuntimeReflectUtils.getReflectClass(getExactClassMaps(className));
     }
 
     @Override
@@ -98,7 +71,7 @@ public class RuntimeMapper extends NestedEntryMap implements Mapper, DataWriter 
                 return getExactClassMaps(k);
             }
         }
-        return null;
+        return new ClassMap[0];
     }
 
     ClassMap getExactObfClassMap(String className, String obfuscated) {
@@ -122,5 +95,10 @@ public class RuntimeMapper extends NestedEntryMap implements Mapper, DataWriter 
             return e.toArray(new ClassMap[0]);
         }
         return new ClassMap[0];
+    }
+
+    @Override
+    public Mapper getMapper(String mapping) {
+        return this;
     }
 }

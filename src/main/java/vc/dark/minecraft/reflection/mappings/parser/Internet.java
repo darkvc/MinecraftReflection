@@ -6,14 +6,23 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class InternetParser implements DataParser {
+public class Internet implements DataParser {
 
     private DataParser underlying;
     private String url;
 
-    public InternetParser(String url, DataParser underlying) {
+    public Internet(String url, DataParser underlying) {
         this.url = url;
         this.underlying = underlying;
+    }
+
+    public Internet(String url, Parsers parser) {
+        this.url = url;
+        this.underlying = parser.getParser();
+    }
+
+    public Internet(Parsers parser, String url) {
+        this(url, parser);
     }
 
     @Override

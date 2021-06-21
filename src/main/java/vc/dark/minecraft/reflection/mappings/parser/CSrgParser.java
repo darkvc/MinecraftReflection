@@ -1,14 +1,11 @@
 package vc.dark.minecraft.reflection.mappings.parser;
 
-import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
-import vc.dark.minecraft.reflection.mappings.runtime.RuntimeParser;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BukkitParser implements DataParser {
+public class CSrgParser implements DataParser {
 
-    private static Pattern bukkitClassPattern = Pattern.compile("([a-zA-Z0-9/$]+) ([a-zA-Z0-9/$_]+)", Pattern.MULTILINE);
+    private static Pattern csrgClassPattern = Pattern.compile("([a-zA-Z0-9/$]+) ([a-zA-Z0-9/$_]+)", Pattern.MULTILINE);
 
     @Override
     public void parse(String[] lines, DataWriter out) {
@@ -34,7 +31,7 @@ public class BukkitParser implements DataParser {
             if (data.startsWith("#")) {
                 continue;
             }
-            Matcher m = bukkitClassPattern.matcher(data);
+            Matcher m = csrgClassPattern.matcher(data);
             while (m.find()) {
                 String original = m.group(2).replace("/", ".");
                 String obfuscated = m.group(1).replace("/", ".");

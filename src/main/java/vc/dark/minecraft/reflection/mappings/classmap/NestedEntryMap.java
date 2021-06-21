@@ -7,10 +7,7 @@ import java.util.*;
 
 public abstract class NestedEntryMap extends EntryMap {
 
-    private boolean strictDupes = false;
-
-    protected NestedEntryMap(boolean strictDupes) {
-        this.strictDupes = strictDupes;
+    protected NestedEntryMap() {
     }
 
     public NestedEntryMap(String obfuscated, String original) {

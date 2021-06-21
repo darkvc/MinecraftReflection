@@ -129,15 +129,20 @@
             <artifactId>jopt-simple</artifactId>
             <version>5.0.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>20.0</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
         <!-- https://stackoverflow.com/questions/14013644/hosting-a-maven-repository-on-github -->
-        <repository>
-            <id>internal.repo</id>
-            <name>Temporary Staging Repository</name>
-            <url>file://${project.build.directory}/mvn-repo</url>
-        </repository>
+        <snapshotRepository>
+            <id>darkvc-nexus</id>
+            <name>Dark.VC Nexus Internal</name>
+            <url>http://nexus.internal.dark.vc/repository/snapshots/</url>
+        </snapshotRepository>
     </distributionManagement>
 
 </project>

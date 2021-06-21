@@ -5,7 +5,6 @@ import vc.dark.minecraft.reflection.mappings.Mappings;
 import java.util.Arrays;
 
 public class TestMappings {
-
     /*
     public void testMappings() {
         Mappings.loadMappingsVersion("1.17");

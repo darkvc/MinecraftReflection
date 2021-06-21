@@ -1,16 +1,14 @@
 package vc.dark.minecraft.reflection.mappings.parser;
 
-import joptsimple.internal.Strings;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** @noinspection Duplicates*/
-public class MojangParser implements DataParser {
+public class YarnParser implements DataParser {
 
-    private static Pattern mojangClassPattern = Pattern.compile("([a-z0-9A-Z\\-\\._$]+) -> ([a-z0-9A-Z\\-\\._$]+):", Pattern.MULTILINE);
-    private static Pattern mojangFieldPattern = Pattern.compile("([a-zA-Z0-9_$]+) -> ([$a-zA-Z0-9_]+)", Pattern.MULTILINE);
-    private static Pattern mojangMethodPattern = Pattern.compile("([<>a-zA-Z0-9_$]+)[\\(\\)].+ -> ([_a-zA-Z0-9$]+)", Pattern.MULTILINE);
+    private static Pattern yarnClassPattern = Pattern.compile("([a-z0-9A-Z\\-\\._$]+) -> ([a-z0-9A-Z\\-\\._$]+):", Pattern.MULTILINE);
+    private static Pattern yarnFieldPattern = Pattern.compile("([a-zA-Z0-9_$]+) -> ([$a-zA-Z0-9_]+)", Pattern.MULTILINE);
+    private static Pattern yarnMethodPattern = Pattern.compile("([<>a-zA-Z0-9_$]+)[\\(\\)].+ -> ([_a-zA-Z0-9$]+)", Pattern.MULTILINE);
 
     @Override
     public void parse(String[] lines, DataWriter out) {
@@ -22,9 +20,9 @@ public class MojangParser implements DataParser {
                 continue;
             }
             // Check class
-            Matcher classMatcher = mojangClassPattern.matcher(line);
-            Matcher fieldMatcher = mojangFieldPattern.matcher(line);
-            Matcher methodMatcher = mojangMethodPattern.matcher(line);
+            Matcher classMatcher = yarnClassPattern.matcher(line);
+            Matcher fieldMatcher = yarnFieldPattern.matcher(line);
+            Matcher methodMatcher = yarnMethodPattern.matcher(line);
             if (classMatcher.find()) {
                 currentClass = classMatcher.group(1);
                 currentObfClass = classMatcher.group(2);

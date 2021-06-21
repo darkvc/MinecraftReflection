@@ -17,6 +17,7 @@ import java.util.List;
 
 public class ReflectionTester implements DataWriter {
     private int count = 0;
+    private String mapperTest;
 
     private static List<String> ignored = new ArrayList<>();
 
@@ -27,19 +28,28 @@ public class ReflectionTester implements DataWriter {
     }
 
     public void test() {
+        boolean hasBukkit = false;
         try {
             Class.forName("org.bukkit.Bukkit");
+            hasBukkit = true;
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            throw new RuntimeException("You must have a spigot jar in the classpath to run this test!");
+            //e.printStackTrace();
+            System.out.println("Skipping Bukkit classes.");
+            //throw new RuntimeException("You must have a spigot jar in the classpath to run this test!");
         }
 
         Mappings.loadMappingsVersion("1.17");
         assert Mappings.hasMappings();
 
-        Cache tester = new Cache("1.17");
-        assert tester.cacheExists();
-        tester.parse(null, this);
+        for (String mapping : new String[]{"mojang", "bukkit"}) {
+            if (mapping.equals("bukkit") && !hasBukkit) {
+                continue;
+            }
+            Cache tester = new Cache("1.17", mapping);
+            assert tester.cacheExists();
+            mapperTest = mapping;
+            tester.parse(null, this);
+        }
         System.out.println("Passed?");
     }
 
@@ -50,9 +60,9 @@ public class ReflectionTester implements DataWriter {
         }
         // Validate class exists.
         try {
-            ReflectClass reflectClass = MinecraftReflection.getExactClass(originalClass);
+            ReflectClass reflectClass = MinecraftReflection.getMapper(mapperTest).getExactClass(originalClass);
             if (reflectClass == null || reflectClass.classObject == null) {
-                System.out.println("Test failed: " + "Class: " + originalClass + " (" + obfuscatedClass + ")");
+                System.out.println("Test failed ("+ mapperTest + "): " + "Class: " + originalClass + " (" + obfuscatedClass + ")");
                 return;
             }
             assert reflectClass != null && reflectClass.classObject != null;
@@ -67,6 +77,9 @@ public class ReflectionTester implements DataWriter {
                 System.exit(255);
             }
             //e.printStackTrace();*/
+        } catch (ClassNotFoundException e) {
+            //e.printStackTrace();
+            System.out.println("Test failed ("+ mapperTest + "): " + "Class: " + originalClass + " (" + obfuscatedClass + ")");
         }
     }
 
@@ -76,14 +89,14 @@ public class ReflectionTester implements DataWriter {
             return;
         }
         try {
-            ReflectClass reflectClass = MinecraftReflection.getExactClass(originalClass);
+            ReflectClass reflectClass = MinecraftReflection.getMapper(mapperTest).getExactClass(originalClass);
             if (reflectClass == null || reflectClass.classObject == null) {
-                System.out.println("Test failed: " + "Class: " + originalClass + " (" + obfuscatedClass + ") " + "Field" + " " + fieldOriginal + " (" + fieldObfuscated + ")");
+                System.out.println("Test failed ("+ mapperTest +"): " + "Class: " + originalClass + " (" + obfuscatedClass + ") " + "Field" + " " + fieldOriginal + " (" + fieldObfuscated + ")");
                 return;
             }
             assert reflectClass instanceof MinecraftReflectClass && (reflectClass.getClassName().equals(originalClass) || reflectClass.getClassName().equals(obfuscatedClass));
             boolean found = false;
-            for (Field f : reflectClass.getFields()) {
+            for (Field f : reflectClass.getDeclaredFields()) {
                 if (f.getName().equals(fieldOriginal) || f.getName().equals(fieldObfuscated)) {
                     found = true;
                     break;
@@ -109,6 +122,9 @@ public class ReflectionTester implements DataWriter {
                 System.exit(255);
             }*/
             // ignore all errors like this?
+        } catch (ClassNotFoundException e) {
+           // e.printStackTrace();
+            System.out.println("Test failed (" + mapperTest + "): " + "Class: " + originalClass + " (" + obfuscatedClass + ") " + "Field" + " " + fieldOriginal + " (" + fieldObfuscated + ")");
         }
     }
 
@@ -118,15 +134,15 @@ public class ReflectionTester implements DataWriter {
             return;
         }
         try {
-            ReflectClass reflectClass = MinecraftReflection.getExactClass(originalClass);
+            ReflectClass reflectClass = MinecraftReflection.getMapper(mapperTest).getExactClass(originalClass);
             if (reflectClass == null || reflectClass.classObject == null) {
-                System.out.println("Test failed: " + "Class: " + originalClass + " (" + obfuscatedClass + ") " + "Method" + " " + methodOriginal + " (" + methodObfuscated + ")");
+                System.out.println("Test failed (" + mapperTest + "): " + "Class: " + originalClass + " (" + obfuscatedClass + ") " + "Method" + " " + methodOriginal + " (" + methodObfuscated + ")");
                 return;
             }
             assert reflectClass != null && reflectClass.classObject != null;
             assert reflectClass instanceof MinecraftReflectClass && (reflectClass.getClassName().equals(originalClass) || reflectClass.getClassName().equals(obfuscatedClass));
             boolean found = false;
-            for (Method m : reflectClass.getMethods()) {
+            for (Method m : reflectClass.getDeclaredMethods()) {
                 if (m.getName().equals(methodOriginal) || m.getName().equals(methodObfuscated)) {
                     found = true;
                     break;
@@ -152,6 +168,9 @@ public class ReflectionTester implements DataWriter {
                 System.exit(255);
             }
             //e.printStackTrace();*/
+        } catch (ClassNotFoundException e) {
+            //e.printStackTrace();
+            System.out.println("Test failed (" + (mapperTest) + "): " + "Class: " + originalClass + " (" + obfuscatedClass + ") " + "Method" + " " + methodOriginal + " (" + methodObfuscated + ")");
         }
     }
 }

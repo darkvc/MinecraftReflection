@@ -1,20 +1,25 @@
 package vc.dark.minecraft.reflection.mappings.runtime;
 
 import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
+import vc.dark.minecraft.reflection.mappings.mapper.Mapper;
+import vc.dark.minecraft.reflection.mappings.mapper.RuntimeMapper;
 import vc.dark.minecraft.reflection.mappings.parser.DataWriter;
 
-public class RuntimeParser {
-    private RuntimeMapper obfHelper;
+public class ObfuscatedClassHelper {
+    private Mapper obfHelper;
+    private DataWriter obfWriter;
 
-    public RuntimeParser() {
+    public ObfuscatedClassHelper() {
         this.obfHelper = new RuntimeMapper();
+        this.obfWriter = (DataWriter) this.obfHelper;
     }
 
-    public RuntimeParser(RuntimeMapper existing) {
+    public ObfuscatedClassHelper(Mapper existing, DataWriter output) {
         this.obfHelper = existing;
+        this.obfWriter = output;
     }
 
-    public RuntimeMapper getMapper() {
+    public Mapper getMapper() {
         return obfHelper;
     }
 
@@ -23,7 +28,7 @@ public class RuntimeParser {
             // Passthru/add class.
             @Override
             public void clazz(String originalClass, String obfuscatedClass) {
-                obfHelper.clazz(originalClass, obfuscatedClass);
+                obfWriter.clazz(originalClass, obfuscatedClass);
                 parser.clazz(originalClass, obfuscatedClass);
             }
 

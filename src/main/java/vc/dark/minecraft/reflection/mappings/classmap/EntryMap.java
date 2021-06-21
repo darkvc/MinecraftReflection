@@ -14,7 +14,9 @@ public class EntryMap {
     public EntryMap(String obfuscated, String original) {
         this.original = original;
         this.obfuscated = new HashSet<>();
-        addObfuscated(obfuscated);
+        if (!obfuscated.equals("")) {
+            addObfuscated(obfuscated);
+        }
     }
 
     public void addObfuscated(String value) {
@@ -46,9 +48,8 @@ public class EntryMap {
             return new String[0];
         }
         // Prefer mojang obfuscation first.
-        List<String> result = new ArrayList<>();
+        List<String> result = new ArrayList<>(obfuscated);
         result.add(original);
-        result.addAll(obfuscated);
         return result.toArray(new String[0]);
     }
 
