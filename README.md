@@ -21,8 +21,8 @@ TODO: More readme writing.
 Repository:
 ```
 <repository>
-    <id>github-darkvc</id>
-    <url>https://github.com/darkvc/MinecraftReflection/raw/maven/</url>
+    <id>darkvc-repo</id>
+    <url>https://repo.dark.vc/repository/public/</url>
     <snapshots>
         <enabled>true</enabled>
         <updatePolicy>always</updatePolicy>
@@ -34,7 +34,7 @@ Dependency:
 ```
 <dependency>
   <groupId>vc.dark.minecraft</groupId>
-  <artifactId>minecraftreflection</artifactId>
+  <artifactId>minecraft-reflection</artifactId>
   <version>1.1-SNAPSHOT</version>
 </dependency>
 ```
