@@ -35,6 +35,9 @@ public class MinecraftReflectClass extends ReflectClass {
         } else {
             reflectClass = MinecraftReflection.getClass(name);
         }
+        if (reflectClass == null) {
+            throw new ClassNotFoundException("Could not find class " + name);
+        }
         this.className = reflectClass.className;
         this.classObject = reflectClass.classObject;
         try {
@@ -49,7 +52,7 @@ public class MinecraftReflectClass extends ReflectClass {
         return new MinecraftReflectClass(b, this);
     }
 
-    public String findField(String name) {
+    private String findField(String name) {
         if (this.mappings == null) {
             return name;
         }
@@ -65,7 +68,7 @@ public class MinecraftReflectClass extends ReflectClass {
         return name;
     }
 
-    public String findMethod(String name, Class<?>[] params) {
+    private String findMethod(String name, Class<?>[] params) {
         if (this.mappings == null) {
             return name;
         }
@@ -128,11 +131,7 @@ public class MinecraftReflectClass extends ReflectClass {
     public Object method(String name, Class<?>[] args, Object... params) {
         return super.method(findMethod(name, args), args, params);
     }
-    /**
-     * @deprecated This is no longer a suitable approach and will likely throw a
-     * UnsupportedException in the future.
-     * Use method() instead.
-     */
+
     @Override
     @Deprecated
     public Object methodSearch(Class<?>[] args, Object... params) {

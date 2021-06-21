@@ -113,11 +113,23 @@ public class ReflectClass {
         return this.classObject.getMethods();
     }
 
+    public Field[] getDeclaredFields() {
+        return this.classObject.getDeclaredFields();
+    }
+
+    public Method[] getDeclaredMethods() {
+        return this.classObject.getDeclaredMethods();
+    }
+
     /**
-     * @deprecated This method's name will be renamed to method()
+     * @deprecated Use method(), same parameters.  This will be removed in the future.
      */
     @Deprecated
     public Object fuzzyMethod(String name, Object... params) {
+        return this.method(name, params);
+    }
+
+    public Object method(String name, Object... params) {
         Class<?>[] args = new Class<?>[params.length];
         int i = 0;
         for (Object param : params) {
@@ -139,7 +151,12 @@ public class ReflectClass {
             return null;
         }
     }
-
+    /**
+     * @deprecated This is no longer a suitable approach and will likely throw a
+     * UnsupportedException in the future.
+     * Use method() instead.
+     */
+    @Deprecated
     public Object methodSearch(Class<?>[] args, Object... params) {
         String name = "";
         try {

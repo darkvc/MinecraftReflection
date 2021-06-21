@@ -1,14 +1,11 @@
 package vc.dark.minecraft.reflection.mappings.runtime;
 
-import jdk.internal.joptsimple.internal.Strings;
-import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
+import vc.dark.minecraft.reflection.mappings.mapper.RuntimeMapper;
 import vc.dark.minecraft.reflection.mappings.parser.DataWriter;
 import vc.dark.minecraft.reflection.mappings.parser.DataParser;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Cache implements DataWriter, DataParser {
 
@@ -17,8 +14,8 @@ public class Cache implements DataWriter, DataParser {
     private DataOutputStream dos;
     private File cacheFile;
 
-    public Cache(String version) {
-        cacheFile = new File(cacheLocation, "cached-" + version);
+    public Cache(String version, String mapperName) {
+        cacheFile = new File(cacheLocation, "cached-" + mapperName + "-" + version);
     }
 
     public void openFile() throws IOException {
@@ -70,7 +67,7 @@ public class Cache implements DataWriter, DataParser {
         if (!cacheExists()) {
             throw new IllegalArgumentException("Could not find cache file!");
         }
-        String[] lines = new String[0];
+        String[] lines;
         try {
             lines = Files.readAllLines(cacheFile.toPath()).toArray(new String[0]);
         } catch (IOException e) {

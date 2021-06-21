@@ -1,8 +1,8 @@
 package vc.dark.minecraft.reflection;
 
 import org.bukkit.Bukkit;
+import vc.dark.minecraft.reflection.mappings.mapper.Mapper;
 import vc.dark.minecraft.reflection.mappings.Mappings;
-import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
 import vc.dark.minecraft.reflection.test.ReflectionTester;
 import vc.dark.reflection.ReflectClass;
 
@@ -95,6 +95,10 @@ public class MinecraftReflection {
         } catch (ClassNotFoundException e) {
             return null;
         }
+    }
+
+    public static Mapper getMapper(String mapping) {
+        return Mappings.getMapper(mapping);
     }
 
     public static void main(String[] args) {

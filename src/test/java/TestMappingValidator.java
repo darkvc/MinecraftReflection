@@ -8,28 +8,34 @@ import java.util.List;
 
 public class TestMappingValidator implements DataWriter {
     private int count = 0;
+    private String mapperTest = "";
+
     public void testMappingsv2() {
         Mappings.loadMappingsVersion("1.17");
         assert Mappings.hasMappings();
 
-        Cache tester = new Cache("1.17");
-        assert tester.cacheExists();
-        tester.parse(null, this);
+        for (String mapping : new String[]{"mojang", "bukkit"}) {
+            Cache tester = new Cache("1.17", mapping);
+            assert tester.cacheExists();
+            mapperTest = mapping;
+            tester.parse(null, this);
+        }
         // check 62765
     }
 
     @Override
     public void clazz(String originalClass, String obfuscatedClass) {
         // Validate class exists.
-        assert Mappings.getExactClassMaps(originalClass) != null;
-        System.out.println("Class " + originalClass + " -> " + Arrays.toString(Mappings.getExactClassMaps(originalClass)));
+        assert Mappings.getMapper(mapperTest).getExactClassMaps(originalClass) != null;
+        if (mapperTest.equals("mojang"))
+            System.out.println("Class (" + mapperTest + ") " + originalClass + " (" + obfuscatedClass + ") -> " + Arrays.toString(Mappings.getMapper(mapperTest).getExactClassMaps(originalClass)));
         count++;
     }
 
     @Override
     public void field(String originalClass, String obfuscatedClass, String fieldOriginal, String fieldObfuscated) {
         boolean found = false;
-        for (ClassMap e : Mappings.getExactClassMaps(originalClass)) {
+        for (ClassMap e : Mappings.getMapper(mapperTest).getExactClassMaps(originalClass)) {
             List<String> test = Arrays.asList(e.getFields(fieldOriginal));
 //            System.out.println("Class: " + originalClass + " (" + obfuscatedClass + ") " + "Field" + " " + fieldOriginal + " (" + fieldObfuscated + ")");
 //            System.out.println(Arrays.toString(test.toArray(new String[0])));
@@ -44,9 +50,9 @@ public class TestMappingValidator implements DataWriter {
     @Override
     public void method(String originalClass, String obfuscatedClass, String methodOriginal, String methodObfuscated) {
         boolean found = false;
-        for (ClassMap e : Mappings.getExactClassMaps(originalClass)) {
+        for (ClassMap e : Mappings.getMapper(mapperTest).getExactClassMaps(originalClass)) {
             List<String> test = Arrays.asList(e.getMethods(methodOriginal));
-            //System.out.println("Class: " + originalClass + " (" + obfuscatedClass + ") " + "Method" + " " + methodOriginal + " (" + methodObfuscated + ")");
+//            System.out.println("Class: " + originalClass + " (" + obfuscatedClass + ") " + "Method" + " " + methodOriginal + " (" + methodObfuscated + ")");
 //            System.out.println(Arrays.toString(test.toArray(new String[0])));
             if (test.contains(methodObfuscated) && test.contains(methodOriginal)) {
                 found = true;

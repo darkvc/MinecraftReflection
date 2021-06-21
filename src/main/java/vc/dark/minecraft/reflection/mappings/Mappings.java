@@ -1,12 +1,14 @@
 package vc.dark.minecraft.reflection.mappings;
 
-import vc.dark.minecraft.reflection.MinecraftReflectClass;
 import vc.dark.minecraft.reflection.MinecraftReflection;
 import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
+import vc.dark.minecraft.reflection.mappings.config.Entry;
+import vc.dark.minecraft.reflection.mappings.config.MappingConfiguration;
+import vc.dark.minecraft.reflection.mappings.mapper.Mapper;
 import vc.dark.minecraft.reflection.mappings.parser.*;
 import vc.dark.minecraft.reflection.mappings.runtime.Cache;
-import vc.dark.minecraft.reflection.mappings.runtime.RuntimeMapper;
-import vc.dark.minecraft.reflection.mappings.runtime.RuntimeParser;
+import vc.dark.minecraft.reflection.mappings.mapper.RuntimeMapper;
+import vc.dark.minecraft.reflection.mappings.runtime.ObfuscatedClassHelper;
 import vc.dark.reflection.ReflectClass;
 
 import java.io.File;
@@ -16,21 +18,25 @@ import java.util.Map;
 
 public class Mappings {
 
-    private static final Map<String, String[]> versions;
+    private static final Map<String, MappingConfiguration> versions;
 
     static {
         versions = new HashMap<>();
-        versions.put("1.17", new String[]{
-                /*
-                 * If there are issues storing URLs inside of here.
-                 * Please create an issue on this repository
-                 *
-                 * https://github.com/darkvc/MinecraftReflection/issues
-                */
-                "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.17-cl.csrg?at=3cec511b16ffa31cb414997a14be313716882e12",
-                "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.17-members.csrg?at=3cec511b16ffa31cb414997a14be313716882e12",
-                "https://launcher.mojang.com/v1/objects/84d80036e14bc5c7894a4fad9dd9f367d3000334/server.txt"
-        });
+           /*
+            * If there are issues storing URLs inside of here.
+            * Please create an issue on this repository
+            *
+            * https://github.com/darkvc/MinecraftReflection/issues
+            */
+        versions.put("1.17", new MappingConfiguration(
+                new Entry("mojang", new Internet(Parsers.YARN, "https://launcher.mojang.com/v1/objects/84d80036e14bc5c7894a4fad9dd9f367d3000334/server.txt")),
+                new Entry("bukkit",
+                        new Internet(Parsers.CSRG,
+                                "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.17-cl.csrg?at=3cec511b16ffa31cb414997a14be313716882e12"),
+                        new Internet(Parsers.CSRG,
+                                "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.17-members.csrg?at=3cec511b16ffa31cb414997a14be313716882e12"))
+        ));
+
     }
 
     private static Mapper mapper;
@@ -45,60 +51,33 @@ public class Mappings {
         return versions.keySet().toArray(new String[0]);
     }
 
-    private static Mapper loadMappings(String version, String bukkitClassesUrl, String bukkitMembersUrl,
-                                       String mojangUrl) {
-        Cache newCache;
-        RuntimeMapper runtimeMap = new RuntimeMapper();
-        newCache = new Cache(version);
-        DataWriter out = runtimeMap;
-        if (newCache.cacheExists()) {
-            newCache.parse(null, out);
-        } else {
-            try {
-                newCache.openFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
+    private static Mapper loadMappings(String version) {
+        for (Map.Entry<String, MappingConfiguration> entry : versions.entrySet()) {
+            if (entry.getKey().endsWith(version)) {
+                return entry.getValue().apply(version);
             }
-            out = new MultiWriter(runtimeMap, newCache);
-            RuntimeParser bukkitOnly = new RuntimeParser(runtimeMap);
-            InternetParser parser;
-            parser = new InternetParser(bukkitClassesUrl, new BukkitParser());
-            parser.parse(null, bukkitOnly.wrap(out));
-            parser = new InternetParser(mojangUrl, new MojangParser());
-            parser.parse(null, out);
-            parser = new InternetParser(bukkitMembersUrl, new BukkitParser());
-            parser.parse(null, bukkitOnly.wrap(out));
         }
-
-        return runtimeMap;
+        return null;
     }
 
     public static void loadMappingsVersion(String version) {
         if (hasMappings()) {
             return;
         }
-        File cache = Cache.cacheLocation;
-        if (!cache.exists()) {
-            if (!cache.mkdir()) {
-                throw new IllegalArgumentException("Could not make cache directory (cached_mcreflect)!");
+        File check = Cache.cacheLocation;
+        if (!check.exists()) {
+            if (!check.mkdir()) {
+                throw new RuntimeException("Could not make " + check.getAbsolutePath() + " as cache directory!");
             }
         }
-        for (Map.Entry<String, String[]> entry : versions.entrySet()) {
-            if (entry.getKey().endsWith(version)) {
-                String[] value = entry.getValue();
-                mapper = loadMappings(entry.getKey(),
-                        value[0], value[1], value[2]);
-                break;
-            }
-        }
+        mapper = loadMappings(version);
         hasMappings = mapper != null;
         if (!hasMappings) {
-            System.out.println("Could not load mappings!");
+            System.err.println("Could not load mappings!");
         }
     }
 
-    public static MinecraftReflectClass getClass(String className) throws ClassNotFoundException {
+    public static ReflectClass getClass(String className) throws ClassNotFoundException {
         MinecraftReflection.loadMappings();
         if (mapper == null) {
             return null;
@@ -106,7 +85,7 @@ public class Mappings {
         return mapper.getClass(className);
     }
 
-    public static MinecraftReflectClass getExactClass(String className) throws ClassNotFoundException {
+    public static ReflectClass getExactClass(String className) throws ClassNotFoundException {
         MinecraftReflection.loadMappings();
         if (mapper == null) {
             return null;
@@ -128,5 +107,13 @@ public class Mappings {
             return new ClassMap[0];
         }
         return mapper.getExactClassMaps(className);
+    }
+
+    public static Mapper getMapper(String mapping) {
+        MinecraftReflection.loadMappings();
+        if (mapper == null) {
+            return null;
+        }
+        return mapper.getMapper(mapping);
     }
 }
