@@ -66,7 +66,7 @@ public class MinecraftReflectClass extends ReflectClass {
         return new MinecraftReflectClass(b, this);
     }
 
-    private String findField(String name) {
+    public String findField(String name) {
         if (this.mappings == null) {
             return name;
         }
@@ -82,7 +82,7 @@ public class MinecraftReflectClass extends ReflectClass {
         return name;
     }
 
-    private String findMethod(String name, Class<?>[] params) {
+    public String findMethod(String name, Class<?>[] params) {
         if (this.mappings == null) {
             return name;
         }
