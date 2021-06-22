@@ -140,7 +140,7 @@
         <snapshotRepository>
             <id>darkvc-nexus</id>
             <name>Dark.VC Nexus Internal</name>
-            <url>http://nexus.internal.dark.vc/repository/snapshots/</url>
+            <url>http://nexus.internal.dark.vc/repository/oss-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
