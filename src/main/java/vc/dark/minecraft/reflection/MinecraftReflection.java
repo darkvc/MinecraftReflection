@@ -1,6 +1,7 @@
 package vc.dark.minecraft.reflection;
 
 import org.bukkit.Bukkit;
+import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
 import vc.dark.minecraft.reflection.mappings.mapper.Mapper;
 import vc.dark.minecraft.reflection.mappings.Mappings;
 import vc.dark.minecraft.reflection.test.ReflectionTester;
@@ -98,7 +99,41 @@ public class MinecraftReflection {
     }
 
     public static Mapper getMapper(String mapping) {
+        if (!hasMappings()) {
+            // Return the shim
+            return getMapper();
+        }
         return Mappings.getMapper(mapping);
+    }
+
+    // Argumentless mapper just points to this class.
+    public static Mapper getMapper() {
+        return new Mapper() {
+            @Override
+            public ReflectClass getClass(String className) throws ClassNotFoundException {
+                return MinecraftReflection.getClass(className);
+            }
+
+            @Override
+            public ReflectClass getExactClass(String className) throws ClassNotFoundException {
+                return MinecraftReflection.getExactClass(className);
+            }
+
+            @Override
+            public ClassMap[] getClassMaps(String className) {
+                return Mappings.getClassMaps(className);
+            }
+
+            @Override
+            public ClassMap[] getExactClassMaps(String className) {
+                return Mappings.getExactClassMaps(className);
+            }
+
+            @Override
+            public Mapper getMapper(String mapping) {
+                return MinecraftReflection.getMapper(mapping);
+            }
+        };
     }
 
     public static void main(String[] args) {

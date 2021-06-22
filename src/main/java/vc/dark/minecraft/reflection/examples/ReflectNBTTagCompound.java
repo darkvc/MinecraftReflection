@@ -2,9 +2,11 @@ package vc.dark.minecraft.reflection.examples;
 
 import vc.dark.minecraft.reflection.MinecraftReflectClass;
 
+// TODO: This should be using Mojang's mappings, but currently does not due to backwards compatibility.
+//       Backwards compatibility will no longer guaranteed in a future release.
 public class ReflectNBTTagCompound extends MinecraftReflectClass {
     public ReflectNBTTagCompound(Object instance) throws ClassNotFoundException {
-        super("NBTTagCompound", true);
+        super("NBTTagCompound", "bukkit", true);
         this.setInstance(instance);
         if (this.instance == null) {
             throw new ClassNotFoundException("Could not set instance to NBTTagCompound reflection class.");
