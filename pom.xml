@@ -19,11 +19,6 @@
         </repository>
     </repositories>
 
-    <properties>
-        <!-- github server corresponds to entry in ~/.m2/settings.xml -->
-        <github.global.server>github</github.global.server>
-    </properties>
-
     <build>
         <finalName>MinecraftReflection</finalName>
         <plugins>
