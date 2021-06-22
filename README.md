@@ -35,7 +35,7 @@ Dependency:
 <dependency>
   <groupId>vc.dark.minecraft</groupId>
   <artifactId>minecraft-reflection</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
 </dependency>
 ```
 
