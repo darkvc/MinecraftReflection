@@ -1,6 +1,7 @@
 package vc.dark.minecraft.reflection;
 
 import vc.dark.minecraft.reflection.mappings.classmap.ClassMap;
+import vc.dark.minecraft.reflection.mappings.mapper.Mapper;
 import vc.dark.reflection.ReflectClass;
 
 import java.lang.reflect.Field;
@@ -28,12 +29,25 @@ public class MinecraftReflectClass extends ReflectClass {
         return mappings;
     }
 
+    /**
+     * In order to gain consistent behavior, you have to define a mapper that your class relies upon.
+     * eg, if you are querying a mojang mapping, you should pass "mojang" to the mapperName.
+     */
+    @Deprecated
     public MinecraftReflectClass(String name, boolean fuzzyNms) throws ClassNotFoundException {
+        this(name, MinecraftReflection.getMapper(), fuzzyNms);
+    }
+
+    public MinecraftReflectClass(String name, String mapperName, boolean fuzzyNms) throws ClassNotFoundException {
+        this(name, (mapperName != null ? MinecraftReflection.getMapper(mapperName) : MinecraftReflection.getMapper()), fuzzyNms);
+    }
+
+    private MinecraftReflectClass(String name, Mapper mapper, boolean fuzzyNms) throws ClassNotFoundException {
         ReflectClass reflectClass;
         if (!fuzzyNms) {
-            reflectClass = MinecraftReflection.getExactClass(name);
+            reflectClass = mapper.getExactClass(name);
         } else {
-            reflectClass = MinecraftReflection.getClass(name);
+            reflectClass = mapper.getClass(name);
         }
         if (reflectClass == null) {
             throw new ClassNotFoundException("Could not find class " + name);

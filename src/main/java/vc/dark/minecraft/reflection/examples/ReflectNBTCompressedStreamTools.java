@@ -8,9 +8,11 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+// TODO: This should be using Mojang's mappings, but currently does not due to backwards compatibility.
+//       Backwards compatibility will no longer guaranteed in a future release.
 public class ReflectNBTCompressedStreamTools extends MinecraftReflectClass {
     public ReflectNBTCompressedStreamTools() throws ClassNotFoundException {
-        super("NBTCompressedStreamTools", true);
+        super("NBTCompressedStreamTools", "bukkit", true);
         if (this.mappings == null) {
             // Backwards compatibility for 1.16.5 (and below potentially)
             this.mappings = new ClassMap("", "");
