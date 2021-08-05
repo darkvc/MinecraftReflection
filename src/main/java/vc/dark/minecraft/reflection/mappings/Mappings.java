@@ -59,7 +59,7 @@ public class Mappings {
     private static Mapper loadMappings(String version) {
         for (Map.Entry<String, MappingConfiguration> entry : versions.entrySet()) {
             if (version.contains(" (MC: " + entry.getKey() + ")") || entry.getKey().equals(version)) {
-                return entry.getValue().apply(version);
+                return entry.getValue().apply(entry.getKey());
             }
         }
         return null;
