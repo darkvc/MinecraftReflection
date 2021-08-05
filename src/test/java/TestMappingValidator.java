@@ -11,7 +11,7 @@ public class TestMappingValidator implements DataWriter {
     private String mapperTest = "";
 
     public void testMappingsv2() {
-        Mappings.loadMappingsVersion("1.17");
+        Mappings.loadMappingsVersion("1.17.1");
         assert Mappings.hasMappings();
 
         for (String mapping : new String[]{"mojang", "bukkit"}) {

@@ -38,7 +38,7 @@ public class ReflectionTester implements DataWriter {
             //throw new RuntimeException("You must have a spigot jar in the classpath to run this test!");
         }
 
-        Mappings.loadMappingsVersion("1.17");
+        Mappings.loadMappingsVersion("1.17.1");
         assert Mappings.hasMappings();
 
         for (String mapping : new String[]{"mojang", "bukkit"}) {

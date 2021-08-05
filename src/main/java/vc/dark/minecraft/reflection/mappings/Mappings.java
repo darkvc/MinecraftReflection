@@ -7,12 +7,9 @@ import vc.dark.minecraft.reflection.mappings.config.MappingConfiguration;
 import vc.dark.minecraft.reflection.mappings.mapper.Mapper;
 import vc.dark.minecraft.reflection.mappings.parser.*;
 import vc.dark.minecraft.reflection.mappings.runtime.Cache;
-import vc.dark.minecraft.reflection.mappings.mapper.RuntimeMapper;
-import vc.dark.minecraft.reflection.mappings.runtime.ObfuscatedClassHelper;
 import vc.dark.reflection.ReflectClass;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,14 +19,22 @@ public class Mappings {
 
     static {
         versions = new HashMap<>();
-           /*
-            * If there are issues storing URLs inside of here.
-            * Please create an issue on this repository
-            *
-            * https://github.com/darkvc/MinecraftReflection/issues
-            */
+        /*
+         * If there are issues storing URLs inside of here.
+         * Please create an issue on this repository
+         *
+         * https://github.com/darkvc/MinecraftReflection/issues
+         */
+        versions.put("1.17.1", new MappingConfiguration(
+                new Entry("mojang", new Internet(Parsers.PROGUARD, "https://launcher.mojang.com/v1/objects/f6cae1c5c1255f68ba4834b16a0da6a09621fe13/server.txt")),
+                new Entry("bukkit",
+                        new Internet(Parsers.CSRG,
+                                "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.17.1-cl.csrg?at=a4785704979a469daa2b7f6826c84e7fe886bb03"),
+                        new Internet(Parsers.CSRG,
+                                "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.17.1-members.csrg?at=a4785704979a469daa2b7f6826c84e7fe886bb03"))
+        ));
         versions.put("1.17", new MappingConfiguration(
-                new Entry("mojang", new Internet(Parsers.YARN, "https://launcher.mojang.com/v1/objects/84d80036e14bc5c7894a4fad9dd9f367d3000334/server.txt")),
+                new Entry("mojang", new Internet(Parsers.PROGUARD, "https://launcher.mojang.com/v1/objects/84d80036e14bc5c7894a4fad9dd9f367d3000334/server.txt")),
                 new Entry("bukkit",
                         new Internet(Parsers.CSRG,
                                 "https://hub.spigotmc.org/stash/projects/SPIGOT/repos/builddata/raw/mappings/bukkit-1.17-cl.csrg?at=3cec511b16ffa31cb414997a14be313716882e12"),
@@ -53,7 +58,7 @@ public class Mappings {
 
     private static Mapper loadMappings(String version) {
         for (Map.Entry<String, MappingConfiguration> entry : versions.entrySet()) {
-            if (entry.getKey().endsWith(version)) {
+            if (version.contains(" (MC: " + entry.getKey() + ")") || entry.getKey().equals(version)) {
                 return entry.getValue().apply(version);
             }
         }

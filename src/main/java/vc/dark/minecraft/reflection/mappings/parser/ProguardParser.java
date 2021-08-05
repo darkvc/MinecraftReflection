@@ -4,11 +4,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** @noinspection Duplicates*/
-public class YarnParser implements DataParser {
+public class ProguardParser implements DataParser {
 
-    private static Pattern yarnClassPattern = Pattern.compile("([a-z0-9A-Z\\-\\._$]+) -> ([a-z0-9A-Z\\-\\._$]+):", Pattern.MULTILINE);
-    private static Pattern yarnFieldPattern = Pattern.compile("([a-zA-Z0-9_$]+) -> ([$a-zA-Z0-9_]+)", Pattern.MULTILINE);
-    private static Pattern yarnMethodPattern = Pattern.compile("([<>a-zA-Z0-9_$]+)[\\(\\)].+ -> ([_a-zA-Z0-9$]+)", Pattern.MULTILINE);
+    private static Pattern proguardClassPattern = Pattern.compile("([a-z0-9A-Z\\-\\._$]+) -> ([a-z0-9A-Z\\-\\._$]+):", Pattern.MULTILINE);
+    private static Pattern proguardFieldPattern = Pattern.compile("([a-zA-Z0-9_$]+) -> ([$a-zA-Z0-9_]+)", Pattern.MULTILINE);
+    private static Pattern proguardMethodPattern = Pattern.compile("([<>a-zA-Z0-9_$]+)[\\(\\)].+ -> ([_a-zA-Z0-9$]+)", Pattern.MULTILINE);
 
     @Override
     public void parse(String[] lines, DataWriter out) {
@@ -20,9 +20,9 @@ public class YarnParser implements DataParser {
                 continue;
             }
             // Check class
-            Matcher classMatcher = yarnClassPattern.matcher(line);
-            Matcher fieldMatcher = yarnFieldPattern.matcher(line);
-            Matcher methodMatcher = yarnMethodPattern.matcher(line);
+            Matcher classMatcher = proguardClassPattern.matcher(line);
+            Matcher fieldMatcher = proguardFieldPattern.matcher(line);
+            Matcher methodMatcher = proguardMethodPattern.matcher(line);
             if (classMatcher.find()) {
                 currentClass = classMatcher.group(1);
                 currentObfClass = classMatcher.group(2);

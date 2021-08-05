@@ -3,7 +3,7 @@ package vc.dark.minecraft.reflection.mappings.parser;
 public enum Parsers {
 
     CSRG(new CSrgParser()),
-    YARN(new YarnParser());
+    PROGUARD(new ProguardParser());
 
     private DataParser parser;
 
