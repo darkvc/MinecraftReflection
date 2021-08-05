@@ -15,7 +15,7 @@ public class TestMappingValidator implements DataWriter {
         assert Mappings.hasMappings();
 
         for (String mapping : new String[]{"mojang", "bukkit"}) {
-            Cache tester = new Cache("1.17", mapping);
+            Cache tester = new Cache("1.17.1", mapping);
             assert tester.cacheExists();
             mapperTest = mapping;
             tester.parse(null, this);
@@ -52,8 +52,8 @@ public class TestMappingValidator implements DataWriter {
         boolean found = false;
         for (ClassMap e : Mappings.getMapper(mapperTest).getExactClassMaps(originalClass)) {
             List<String> test = Arrays.asList(e.getMethods(methodOriginal));
-//            System.out.println("Class: " + originalClass + " (" + obfuscatedClass + ") " + "Method" + " " + methodOriginal + " (" + methodObfuscated + ")");
-//            System.out.println(Arrays.toString(test.toArray(new String[0])));
+            System.out.println("Class: " + originalClass + " (" + obfuscatedClass + ") " + "Method" + " " + methodOriginal + " (" + methodObfuscated + ")");
+            System.out.println(Arrays.toString(test.toArray(new String[0])));
             if (test.contains(methodObfuscated) && test.contains(methodOriginal)) {
                 found = true;
                 count++;
