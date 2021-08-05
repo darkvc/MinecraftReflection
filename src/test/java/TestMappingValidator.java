@@ -52,8 +52,8 @@ public class TestMappingValidator implements DataWriter {
         boolean found = false;
         for (ClassMap e : Mappings.getMapper(mapperTest).getExactClassMaps(originalClass)) {
             List<String> test = Arrays.asList(e.getMethods(methodOriginal));
-            System.out.println("Class: " + originalClass + " (" + obfuscatedClass + ") " + "Method" + " " + methodOriginal + " (" + methodObfuscated + ")");
-            System.out.println(Arrays.toString(test.toArray(new String[0])));
+//            System.out.println("Class: " + originalClass + " (" + obfuscatedClass + ") " + "Method" + " " + methodOriginal + " (" + methodObfuscated + ")");
+//            System.out.println(Arrays.toString(test.toArray(new String[0])));
             if (test.contains(methodObfuscated) && test.contains(methodOriginal)) {
                 found = true;
                 count++;
