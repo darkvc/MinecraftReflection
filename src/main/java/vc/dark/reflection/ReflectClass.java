@@ -47,7 +47,7 @@ public class ReflectClass {
             f.setAccessible(true);
             return f.get(this.instance);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             return null;
         }
     }
@@ -59,7 +59,7 @@ public class ReflectClass {
             f.setAccessible(true);
             f.set(this.instance, obj);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             return;
         }
     }
@@ -90,7 +90,7 @@ public class ReflectClass {
             f.setAccessible(true);
             return f.invoke(this.instance, params);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             return null;
         }
     }
@@ -100,7 +100,7 @@ public class ReflectClass {
             Field f = this.classObject.getField(name);
             return f.get(this.instance);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             return null;
         }
     }
